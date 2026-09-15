@@ -7,3 +7,4 @@ pretty_midi>=0.2.10
 soundfile>=0.12
 python-dotenv
 gradio>=5
+spaces

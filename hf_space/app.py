@@ -21,6 +21,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 os.environ.setdefault("OMP_NUM_THREADS", "2")
 
+import spaces  # noqa: E402  — ZeroGPU: the platform requires a @spaces.GPU function (the maths is NumPy either way)
 import gradio as gr  # noqa: E402
 
 from flybrain_composer.generate import generate_riffs  # noqa: E402
@@ -30,14 +31,19 @@ SONGS = CORPUS.get("songs", [])
 CYCLES = [15, 17, 19, 21, 23, 25, 27, 29, 31]
 
 
-def run(bars, phrase_bars, bpm, cycle, snare, density, wildness, generations, seed, progress=gr.Progress()):
+def _seconds_needed(bars, phrase_bars, bpm, cycle, snare, density, wildness, generations, seed) -> int:
+    """ZeroGPU charges the visitor's quota for the time requested: ask only for what this run needs
+    (~1 s per bar per search generation on the Space, plus load and render)."""
+    return int(min(120, max(20, 12 + 1.0 * float(bars) * float(generations))))
+
+
+@spaces.GPU(duration=_seconds_needed)
+def run(bars, phrase_bars, bpm, cycle, snare, density, wildness, generations, seed):
     t0 = time.time()
     out_dir = Path(tempfile.mkdtemp(prefix="flybrain_"))
-    lines = []
 
     def cb(k, n, msg):
-        lines.append(msg)
-        progress(k / n, desc=f"riff {k}/{n} committed")
+        print(f"[space] riff {k}/{n}: {msg}", flush=True)
 
     out = generate_riffs(bars=int(bars), phrase_bars=int(phrase_bars), bpm=float(bpm), cycle16=int(cycle),
                          snare=snare, density=float(density), wildness=float(wildness),
@@ -63,18 +69,20 @@ with gr.Blocks(title="FlyBrain Composer — a fruit fly's brain makes up djent r
         "The full show — real-time audio, the spiking brain, the fly playing an Ibanez M8M, 👍/👎 from the audience — "
         "runs on a desktop: [github.com/SyhmZlkrn/Djent-Fruit-Fly](https://github.com/SyhmZlkrn/Djent-Fruit-Fly). "
         "Honest note: a shuffled or random network of the same size reproduces songs just as well — the connectome is "
-        "the medium the riffs are written on, not the composer."
+        "the medium the riffs are written on, not the composer.\n\n"
+        "*Runs on Hugging Face ZeroGPU: each riff uses about a minute of your free daily GPU quota "
+        "(log in to Hugging Face for more).*"
     )
     with gr.Row():
         with gr.Column(scale=1):
-            bars = gr.Slider(8, 32, value=16, step=4, label="bars")
+            bars = gr.Slider(8, 24, value=16, step=4, label="bars  (16 bars × 3 generations ≈ 1 minute of quota)")
             phrase_bars = gr.Radio([2, 4, 8], value=4, label="bars per riff")
             bpm = gr.Slider(90, 200, value=140, step=1, label="BPM")
             cycle = gr.Dropdown(CYCLES, value=23, label="riff cycle (sixteenths) — the polymeter against 4/4")
             snare = gr.Radio([("2 & 4", "24"), ("thirds (every 3 sixteenths)", "thirds")], value="24", label="snare")
             density = gr.Slider(5, 14, value=9, step=0.5, label="notes per bar")
             wildness = gr.Slider(0.0, 1.0, value=0.5, step=0.05, label="wildness (how far the knobs may stray)")
-            generations = gr.Slider(2, 10, value=5, step=1, label="search generations per riff (more = slower, groovier)")
+            generations = gr.Slider(2, 6, value=3, step=1, label="search generations per riff (more = slower, groovier)")
             seed = gr.Number(value=0, precision=0, label="seed")
             btn = gr.Button("🎸 Make a riff", variant="primary")
         with gr.Column(scale=1):
