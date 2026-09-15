@@ -1,0 +1,31 @@
+.env
+.venv/
+__pycache__/
+*.pyc
+data/cache/
+data/skeletons/
+data/*.gp3
+data/*.gp4
+data/*.gp5
+data/*.gpx
+output/
+third_party/
+*.egg-info/
+.ipynb_checkpoints/
+stage/data/*
+output/stems/
+data/*.pdf
+data/*_backing.*
+data/*_original.*
+data/*.mp3
+
+# --- do not publish: tabs, recordings, trained models, tokens, third-party assets ---
+data/*.gp
+data/songs/*
+!data/songs/README.txt
+.claude/settings.local.json
+build/
+hf_space/__pycache__/
+# the stage's generated assets are rebuilt by `stage-export`; the CC BY 4.0 guitar mesh is shipped
+!stage/data/guitar.glb
+!stage/data/guitar.json

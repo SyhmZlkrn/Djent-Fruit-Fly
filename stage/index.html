@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>FlyBrain Composer — stage</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root { color-scheme: dark; }
+  html, body { margin: 0; height: 100%; background: #05060a; color: #dfe6f3; font: 13px/1.4 "Segoe UI", system-ui, sans-serif; overflow: hidden; }
+  #c { display: block; width: 100vw; height: 100vh; }
+  #hud { position: fixed; inset: 0; pointer-events: none; }
+  .panel { position: absolute; background: rgba(8, 10, 18, .72); border: 1px solid rgba(120, 150, 255, .18); border-radius: 10px; padding: 10px 12px; backdrop-filter: blur(6px); pointer-events: auto; }
+  #title { left: 16px; top: 14px; min-width: 300px; }
+  #title h1 { margin: 0 0 2px; font-size: 16px; font-weight: 600; letter-spacing: .02em; }
+  #title h1 span { color: #ffb347; }
+  #title .sub { color: #9fb0d0; font-size: 12px; }
+  #status { left: 16px; bottom: 16px; min-width: 340px; font-variant-numeric: tabular-nums; }
+  #status .row { display: flex; gap: 10px; align-items: center; margin: 3px 0; }
+  #status .k { color: #8ea0c6; width: 64px; }
+  #section { font-size: 15px; color: #ffd28a; font-weight: 600; }
+  #note { font-size: 22px; font-weight: 700; color: #fff; letter-spacing: .02em; }
+  #note small { font-size: 12px; color: #9fb0d0; font-weight: 400; }
+  #controls { right: 16px; top: 14px; display: flex; flex-direction: column; gap: 6px; }
+  button { background: #16203a; color: #e6ecff; border: 1px solid rgba(140, 170, 255, .35); border-radius: 7px; padding: 6px 10px; cursor: pointer; font: inherit; }
+  button:hover { background: #22304f; }
+  button.on { background: #2b58c4; border-color: #6c93ff; }
+  .grp { display: flex; gap: 6px; flex-wrap: wrap; }
+  #bar { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: rgba(255,255,255,.08); }
+  #bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #ff6a3d, #ffd28a); }
+  #livePanel { left: 16px; top: 96px; width: 340px; font-size: 12px; }
+  #livePanel .lhead { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
+  #livePanel .lhead b { color: #ff6a3d; letter-spacing: .06em; font-size: 12px; }
+  #livePanel .lhead b.off { color: #8ea0c6; }
+  #livePanel .lhead span { color: #9fb0d0; font-variant-numeric: tabular-nums; }
+  #livePanel .lrow { display: flex; gap: 8px; margin: 2px 0; font-variant-numeric: tabular-nums; }
+  #livePanel .lrow .k { color: #8ea0c6; width: 36px; flex: none; }
+  #livePanel .lrow span:last-child { color: #dfe6f3; }
+  #livePanel .lnote { color: #8ea0c6; font-size: 11px; margin-top: 6px; line-height: 1.35; }
+  #livePanel .lvote { align-items: center; }
+  #livePanel .lvote button { padding: 2px 9px; font-size: 15px; line-height: 1.2; }
+  #livePanel .lvote span:last-child { color: #9fb0d0; font-size: 11px; }
+  #livePanel .lrow #liveTaste, #livePanel .lrow #liveKnobs { color: #9fb0d0; font-size: 11px; }
+  #liveHist { display: flex; align-items: flex-end; gap: 2px; height: 34px; margin-top: 6px; position: relative; border-bottom: 1px solid rgba(140,170,255,.25); }
+  #liveHist i { display: block; width: 10px; background: #ff6a3d; opacity: .9; border-radius: 2px 2px 0 0; }
+  #liveHist i.replay { background: #6b7a9a; }
+  #liveHist i.pending { background: transparent; border: 1px dashed #6b7a9a; }
+  #liveHist .base { position: absolute; left: 0; right: 0; height: 0; border-top: 1px dashed #ffd28a; opacity: .7; }
+  #livePanel:not([hidden]) ~ #placePanel { top: 330px; }
+  #legend { right: 16px; bottom: 16px; font-size: 11px; color: #9fb0d0; max-width: 300px; }
+  #legend b { color: #dfe6f3; }
+  .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; }
+  #overlay { position: fixed; inset: 0; display: grid; place-items: center; background: rgba(5, 6, 10, .9); z-index: 5; }
+  #overlay .box { text-align: center; max-width: 560px; padding: 30px; }
+  #overlay h2 { margin: 0 0 8px; font-size: 22px; }
+  #overlay p { color: #9fb0d0; }
+  #overlay button { font-size: 16px; padding: 10px 18px; margin: 8px; }
+  #loading { color: #ffd28a; margin-top: 12px; font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="hud">
+  <div id="title" class="panel">
+    <h1><span>FlyBrain Composer</span> — a fly plays Rational Gaze</h1>
+    <div class="sub">MaleCNS connectome (2,318 central-brain neurons) as a reservoir · 8ridge lite guitar engine · NeuroMechFly body · Ibanez M8M</div>
+  </div>
+  <div id="controls" class="panel">
+    <div class="grp">
+      <button id="btnPlay">▶ Play (standalone)</button>
+      <button id="btnWs" title="connect to the Python conductor — starts it if it is not running (brain window + audio from Python)">⟲ Conductor</button>
+      <button id="btnStop" hidden title="stop the conductor this page started">■ Stop</button>
+    </div>
+    <div class="grp">
+      <button data-cam="audience" class="on">Audience</button>
+      <button data-cam="side">Side</button>
+      <button data-cam="fretboard">Fretboard</button>
+      <button data-cam="brain">Brain</button>
+      <button data-cam="orbit">Orbit</button>
+    </div>
+    <div class="grp" id="stemGrp">
+      <button id="stemGuitar" class="on" title="the fly's guitar (8ridge lite, double-tracked)">🎸 Fly guitar</button>
+      <button id="stemBacking" class="on" title="the backing track">🥁 Backing</button>
+      <button id="stemDrums" title="synthesized drum kit">Synth drums</button>
+    </div>
+    <div class="grp">
+      <button id="tglLive" title="Live Stage B: the fly improvises on the song phrase by phrase and gets a treat for groove (starts the Python conductor with --improvise)">🧠 Live learning</button>
+      <button id="btnGen" title="Riffs of its own from everything it learned (starts the conductor with --generate; needs fit-multi)">🎸 Own riffs</button>
+    </div>
+    <div class="grp">
+      <button id="tglHolo" class="on">Hologram</button>
+      <button id="tglHead" class="on">Brain in head</button>
+      <button id="tglBloom" class="on">Bloom</button>
+      <button id="tglRois" class="on">Regions</button>
+    </div>
+  </div>
+  <div id="status" class="panel">
+    <div class="row"><span class="k">section</span><span id="section">—</span></div>
+    <div class="row"><span class="k">note</span><span id="note">—</span></div>
+    <div class="row"><span class="k">time</span><span id="time">0:00.0</span><span id="clock" style="color:#8ea0c6"></span></div>
+    <div class="row"><span class="k">spikes</span><span id="spk">0 /s</span><span id="fps" style="color:#8ea0c6"></span></div>
+    <div class="row" style="color:#8ea0c6; font-size:11px"><span class="k">guitar</span><span id="place">—</span></div>
+  </div>
+  <div id="livePanel" class="panel" hidden>
+    <div class="lhead"><b id="liveMode">LIVE LEARNING</b><span id="livePhrase">phrase —</span></div>
+    <div class="lrow"><span class="k">now</span><span id="liveNow">—</span></div>
+    <div class="lrow"><span class="k">next</span><span id="liveNext">—</span></div>
+    <div class="lrow"><span class="k">treat</span><span id="liveTreat">—</span></div>
+    <div class="lrow"><span class="k">knobs</span><span id="liveKnobs">—</span></div>
+    <div class="lrow lvote"><span class="k">you</span>
+      <button id="voteUp" title="treat! (K)">👍</button><button id="voteDown" title="no treat (J)">👎</button>
+      <span id="liveHuman">— press K / J while it plays</span></div>
+    <div class="lrow"><span class="k">taste</span><span id="liveTaste">—</span></div>
+    <div id="liveHist" title="fitness of each phrase: orange = improvised, grey = replay; line = the Stage A replay level"></div>
+    <div class="lnote">the fly plays this phrase while its brain auditions candidates for the next one; the winner's groove score minus the running average is the treat injected into the PAM/PPL1 dopamine neurons</div>
+  </div>
+  <div id="placePanel" class="panel" hidden style="left: 16px; top: 96px; font-size: 12px; color:#dfe6f3; max-width: 360px">
+    <b>Placement mode</b> (P to exit) — <b>arrows</b> move the guitar (←/→ = fly's left/right, ↑/↓ = up/down,
+    Shift+↑/↓ or PgUp/PgDn = toward/away from you), <b>Q/E</b> tilt the neck, <b>A/D</b> swing it toward you,
+    <b>Z/C</b> tip the face, <b>R</b> reset, <b>Enter</b> prints the line for <code>stage/app.js</code>. Remembered in this browser.
+  </div>
+  <div id="legend" class="panel">
+    <b>Brain</b>: <span class="dot" style="background:#2a3f9a"></span>resting neuron ·
+    <span class="dot" style="background:#ff3b1f"></span>just spiked ·
+    <span class="dot" style="background:#fff2a8"></span>spiking now ·
+    <span class="dot" style="background:#f240f2"></span>PAM/PPL1 dopaminergic (reward site).<br>
+    Spikes: Brian2 LIF network on the MaleCNS wiring. Notes: ridge readout of the reservoir, played through 8ridge lite.
+  </div>
+  <div id="bar"><i id="barFill"></i></div>
+</div>
+<div id="overlay">
+  <div class="box">
+    <h2>FlyBrain Composer — the stage</h2>
+    <p>A <i>Drosophila</i> (NeuroMechFly body) plays Meshuggah's <i>Rational Gaze</i> on an 8-string Ibanez M8M.
+       The notes were composed by a reservoir built from the MaleCNS connectome; the brain above the stage is the
+       same 2,318 neurons spiking in a Brian2 simulation, replayed in sync with the music.</p>
+    <button id="startStandalone">▶ Play here (audio in the browser)</button>
+    <button id="startFlyOnly">▶ Play — fly guitar only</button>
+    <button id="startConductor">⟲ Conductor (brain window + audio from Python)</button>
+    <button id="startLive">🧠 Live learning (improvises on the song)</button>
+    <button id="startGen">🎸 Own riffs (from everything it learned)</button>
+    <div id="loading">loading…</div>
+    <p style="font-size:12px;color:#8ea0c6;margin:6px 0 0">Conductor / Live learning start the Python programs for you (20–40 s to load the brain); the sound then comes from Python, not the browser.</p>
+  </div>
+</div>
+<script type="importmap">
+{ "imports": { "three": "./vendor/three.module.js", "three/addons/": "./vendor/jsm/" } }
+</script>
+<script type="module" src="./app.js?v=28"></script>
+</body>
+</html>

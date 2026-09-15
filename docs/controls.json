@@ -1,0 +1,87 @@
+{
+ "song": "Rational Gaze (pdf tab)",
+ "lambda": 0.0002,
+ "seed": 0,
+ "n_neurons": 2318,
+ "n_edges": 236870,
+ "results": {
+  "real": {
+   "label": "REAL MaleCNS wiring",
+   "n_pred": 1272.0,
+   "n_truth": 1272.0,
+   "matched": 1259.0,
+   "precision": 0.9897798742138365,
+   "recall": 0.9897798742138365,
+   "f1": 0.9897798742138365,
+   "pitch_accuracy": 1.0,
+   "mean_onset_error_ms": 0.0,
+   "features": 2379,
+   "seconds": 4.6
+  },
+  "inputs_only": {
+   "label": "inputs only (no brain)",
+   "n_pred": 0.0,
+   "n_truth": 1272.0,
+   "matched": 0.0,
+   "precision": 0.0,
+   "recall": 0.0,
+   "f1": 0.0,
+   "pitch_accuracy": 0.0,
+   "mean_onset_error_ms": NaN,
+   "features": 61,
+   "seconds": 3.6
+  },
+  "shuffled": {
+   "label": "SHUFFLED connectome (synaptic partners permuted)",
+   "n_pred": 1274.0,
+   "n_truth": 1272.0,
+   "matched": 1266.0,
+   "precision": 0.9937205651491365,
+   "recall": 0.9952830188679245,
+   "f1": 0.9945011783189316,
+   "pitch_accuracy": 1.0,
+   "mean_onset_error_ms": 0.0,
+   "features": 2379,
+   "seconds": 4.4
+  },
+  "random_same_size": {
+   "label": "RANDOM reservoir, 2318 units, same density",
+   "n_pred": 1265.0,
+   "n_truth": 1272.0,
+   "matched": 1263.0,
+   "precision": 0.9984189723320158,
+   "recall": 0.9929245283018868,
+   "f1": 0.9956641702798581,
+   "pitch_accuracy": 1.0,
+   "mean_onset_error_ms": 0.0,
+   "features": 2379,
+   "seconds": 4.5
+  },
+  "random_small": {
+   "label": "RANDOM reservoir, 231 units",
+   "n_pred": 79.0,
+   "n_truth": 1272.0,
+   "matched": 59.0,
+   "precision": 0.7468354430379747,
+   "recall": 0.046383647798742135,
+   "f1": 0.08734270910436712,
+   "pitch_accuracy": 0.8813559322033898,
+   "mean_onset_error_ms": 0.0,
+   "features": 292,
+   "seconds": 0.3
+  },
+  "unsigned": {
+   "label": "REAL wiring, excitatory/inhibitory signs removed",
+   "n_pred": 1268.0,
+   "n_truth": 1272.0,
+   "matched": 1251.0,
+   "precision": 0.9865930599369085,
+   "recall": 0.9834905660377359,
+   "f1": 0.9850393700787402,
+   "pitch_accuracy": 1.0,
+   "mean_onset_error_ms": 0.0,
+   "features": 2379,
+   "seconds": 4.6
+  }
+ }
+}

@@ -1,0 +1,884 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>body{margin:0;font:14px system-ui}img{max-width:100%}[hidden]{display:none!important}</style></head><body><title>FlyBrain Composer Pipeline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --ground: #f1f2f5;
+    --paper: #ffffff;
+    --ink: #161a24;
+    --ink-2: #414a5e;
+    --muted: #6f7890;
+    --line: #d4d8e2;
+    --line-soft: #e6e8ef;
+    --accent: #ff6a3d;        /* spike orange */
+    --accent-ink: #b8401c;
+    --blue: #3b5bdb;          /* resting neuron */
+    --blue-soft: #e3e8fb;
+    --magenta: #d63ad6;       /* dopamine */
+    --magenta-soft: #f9e3f9;
+    --gold: #c98a1a;
+    --gold-soft: #fbf0d6;
+    --green: #2f8f5b;
+    --green-soft: #e0f2e8;
+    --badge: #eef0f5;
+    --badge-ink: #333a4c;
+    --shadow: 0 1px 2px rgba(22,26,36,.06), 0 8px 24px rgba(22,26,36,.06);
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0b0d14; --paper: #141826; --ink: #eef0f6; --ink-2: #c4cad9; --muted: #8b93aa;
+      --line: #2a3045; --line-soft: #1e2333;
+      --accent: #ff7a4d; --accent-ink: #ffb597;
+      --blue: #7f97ff; --blue-soft: #1c2447;
+      --magenta: #ee6cee; --magenta-soft: #3a1c3a;
+      --gold: #f0b64b; --gold-soft: #3a2e14;
+      --green: #5fcf8f; --green-soft: #15311f;
+      --badge: #1c2130; --badge-ink: #d6dbe8;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.35);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #0b0d14; --paper: #141826; --ink: #eef0f6; --ink-2: #c4cad9; --muted: #8b93aa;
+    --line: #2a3045; --line-soft: #1e2333;
+    --accent: #ff7a4d; --accent-ink: #ffb597;
+    --blue: #7f97ff; --blue-soft: #1c2447;
+    --magenta: #ee6cee; --magenta-soft: #3a1c3a;
+    --gold: #f0b64b; --gold-soft: #3a2e14;
+    --green: #5fcf8f; --green-soft: #15311f;
+    --badge: #1c2130; --badge-ink: #d6dbe8;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.35);
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--ground); color: var(--ink);
+    font-family: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif; font-size: 16px; line-height: 1.55;
+  }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 40px 28px 80px; }
+  h1, h2, h3 { font-family: "Barlow Condensed", "Arial Narrow", Impact, sans-serif; text-wrap: balance; margin: 0; letter-spacing: .005em; }
+  h1 { font-size: clamp(40px, 6vw, 64px); font-weight: 700; line-height: 1.0; }
+  h2 { font-size: 30px; font-weight: 600; line-height: 1.1; }
+  h3 { font-size: 20px; font-weight: 600; line-height: 1.2; }
+  p { margin: 0; }
+  .prose { max-width: 66ch; color: var(--ink-2); }
+  .eyebrow { font-family: "IBM Plex Mono", ui-monospace, Consolas, monospace; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+  code, .mono { font-family: "IBM Plex Mono", ui-monospace, Consolas, monospace; font-size: .92em; }
+  a { color: var(--blue); }
+
+  header { display: grid; gap: 14px; padding-bottom: 28px; border-bottom: 1px solid var(--line); }
+  header .lede { font-size: 19px; max-width: 62ch; color: var(--ink-2); }
+  .stagepath { display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: center; margin-top: 6px; font-family: "IBM Plex Mono", monospace; font-size: 13px; color: var(--ink-2); }
+  .stagepath b { font-weight: 500; color: var(--ink); }
+  .stagepath .arrow { color: var(--muted); }
+
+  section { padding: 44px 0 0; }
+  .sect-head { display: grid; gap: 6px; margin-bottom: 18px; }
+  .sect-head .prose { margin-top: 4px; }
+
+  figure { margin: 0; }
+  .fig { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 18px; box-shadow: var(--shadow); }
+  .fig svg { display: block; width: 100%; height: auto; }
+  .scroller { overflow-x: auto; }
+  .scroller svg { min-width: 760px; }
+  figcaption { margin-top: 12px; font-size: 14px; color: var(--muted); max-width: 80ch; }
+  svg text { font-family: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif; fill: var(--ink); }
+  svg .t-title { font-weight: 600; font-size: 13px; }
+  svg .t-sub { font-size: 11px; fill: var(--muted); }
+  svg .t-lane { font-family: "Barlow Condensed", "Arial Narrow", sans-serif; font-weight: 600; font-size: 15px; letter-spacing: .04em; fill: var(--muted); }
+  svg .t-edge { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 10.5px; fill: var(--ink-2); }
+  svg .t-mono { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 11px; }
+  svg .box { fill: var(--paper); stroke: var(--line); stroke-width: 1.2; }
+  svg .box-in { fill: var(--ground); stroke: var(--line); stroke-width: 1.2; }
+  svg .box-hot { fill: var(--paper); stroke: var(--accent); stroke-width: 1.6; }
+  svg .edge { stroke: currentColor; stroke-width: 1.3; fill: none; }
+  svg .edge-soft { stroke: var(--muted); stroke-width: 1.1; fill: none; stroke-dasharray: 4 3; }
+  svg .lane-line { stroke: var(--line-soft); stroke-width: 1; }
+  svg .hi { stroke: var(--accent); stroke-width: 2; fill: none; }
+  svg .hi-fill { fill: var(--accent); }
+
+  /* stages */
+  .stage { display: grid; grid-template-columns: 1fr; gap: 14px; padding: 22px 0 8px; border-top: 1px solid var(--line-soft); }
+  .stage:first-of-type { border-top: 0; }
+  .stage-title { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+  .stage-title .num { font-family: "IBM Plex Mono", monospace; font-size: 12px; color: var(--muted); letter-spacing: .1em; }
+  .stage-title h3 { font-size: 24px; }
+  .stage-title .plain { font-style: italic; color: var(--muted); font-size: 15px; }
+  .flow { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+  .cell { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; display: grid; gap: 6px; align-content: start; }
+  .cell .lbl { font-family: "IBM Plex Mono", monospace; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; }
+  .cell.in .lbl { color: var(--blue); } .cell.do .lbl { color: var(--accent-ink); } .cell.out .lbl { color: var(--green); }
+  .cell p { font-size: 15px; color: var(--ink-2); }
+  .cell p b { color: var(--ink); font-weight: 600; }
+  .tools { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .tools .lbl { font-family: "IBM Plex Mono", monospace; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-right: 4px; }
+  .badge { font-family: "IBM Plex Mono", monospace; font-size: 12.5px; background: var(--badge); color: var(--badge-ink); border: 1px solid var(--line); border-radius: 5px; padding: 3px 8px; white-space: nowrap; }
+  .badge.py { border-color: color-mix(in srgb, var(--blue) 45%, var(--line)); }
+  .badge.js { border-color: color-mix(in srgb, var(--gold) 55%, var(--line)); }
+  .badge.data { border-color: color-mix(in srgb, var(--magenta) 45%, var(--line)); }
+  .note { font-size: 14px; color: var(--muted); max-width: 80ch; }
+  .note b { color: var(--ink-2); font-weight: 600; }
+
+  /* numbers */
+  .numbers { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+  .num-tile { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; display: grid; gap: 2px; }
+  .num-tile .v { font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: 34px; line-height: 1; font-variant-numeric: tabular-nums; }
+  .num-tile .k { font-size: 13px; color: var(--muted); }
+
+  /* table */
+  table { width: 100%; border-collapse: collapse; background: var(--paper); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; font-size: 15px; }
+  th, td { text-align: left; padding: 11px 14px; border-bottom: 1px solid var(--line-soft); vertical-align: top; }
+  th { font-family: "IBM Plex Mono", monospace; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); font-weight: 500; background: var(--ground); }
+  tr:last-child td { border-bottom: 0; }
+  td.real { color: var(--ink); } td.model { color: var(--ink-2); }
+  .pill { display: inline-block; font-family: "IBM Plex Mono", monospace; font-size: 11px; padding: 2px 7px; border-radius: 4px; }
+  .pill.real { background: var(--green-soft); color: var(--green); }
+  .pill.model { background: var(--gold-soft); color: var(--gold); }
+
+  /* tools glossary */
+  .glossary { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+  .gcol { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; }
+  .gcol h3 { font-size: 18px; margin-bottom: 8px; }
+  .gcol ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 7px; }
+  .gcol li { font-size: 14px; color: var(--ink-2); display: grid; grid-template-columns: auto 1fr; gap: 8px; align-items: baseline; }
+  .gcol li .badge { justify-self: start; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 13px; color: var(--muted); margin-top: 10px; }
+  .legend i { display: inline-block; width: 22px; height: 0; border-top: 2px solid currentColor; vertical-align: middle; margin-right: 6px; }
+  .legend .l-solid { color: var(--ink); } .legend .l-dash { color: var(--muted); border-top-style: dashed; } .legend .l-hi { color: var(--accent); }
+
+  /* inventory tables */
+  .inv { margin-top: 26px; }
+  .inv h3 { font-size: 20px; margin-bottom: 10px; }
+  .inv h3 .sub { font-family: "IBM Plex Sans", sans-serif; font-weight: 400; font-size: 14px; color: var(--muted); }
+  .inv-t { font-size: 14px; min-width: 720px; }
+  .inv-t td, .inv-t th { padding: 9px 12px; }
+  .inv-t td:first-child { white-space: nowrap; }
+  .inv-t td:nth-child(2) { color: var(--ink-2); }
+  .inv-t td:nth-child(3) { color: var(--ink); }
+  .inv-t td:last-child { color: var(--muted); font-size: 13px; }
+  .inv-t code { font-size: 12.5px; }
+  /* build log */
+  .log { font-size: 14px; min-width: 800px; }
+  .log td, .log th { padding: 9px 12px; }
+  .log td.t { font-family: "IBM Plex Mono", monospace; white-space: nowrap; color: var(--muted); font-size: 12.5px; }
+  .log td:nth-child(3) { color: var(--ink-2); }
+  .log td:last-child { color: var(--ink-2); font-size: 13.5px; }
+  .log td:last-child b { color: var(--ink); }
+  .proofgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; margin-top: 18px; }
+  .proofgrid figure { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .proofgrid img { display: block; width: 100%; height: auto; background: #000; }
+  .proofgrid figcaption { padding: 10px 12px 12px; margin: 0; font-size: 13.5px; }
+  .proofgrid figcaption b { color: var(--ink); }
+  .twocol { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px; margin-top: 18px; align-items: start; }
+  .proofpre { margin: 0; font-family: "IBM Plex Mono", monospace; font-size: 13px; line-height: 1.5; color: var(--ink); background: var(--ground); border: 1px solid var(--line-soft); border-radius: 6px; padding: 12px 14px; overflow-x: auto; }
+  .twocol svg { display: block; width: 100%; height: auto; }
+  .twocol svg .grid line { stroke: var(--line-soft); }
+  .twocol svg text { font-size: 11px; fill: var(--muted); }
+  .twocol svg .best { stroke: var(--accent); stroke-width: 2; fill: none; }
+  .twocol svg .mean { stroke: var(--blue); stroke-width: 1.5; fill: none; }
+  .twocol svg .ever { stroke: var(--ink); stroke-width: 1.2; fill: none; stroke-dasharray: 3 3; }
+  .twocol svg .base { stroke: var(--gold); stroke-width: 1; stroke-dasharray: 6 3; }
+  .twocol svg .lbl-base { fill: var(--gold); }
+  .twocol svg .lbl-hi { fill: var(--accent-ink); font-weight: 600; }
+  .twocol svg .dot { fill: var(--accent); }
+  @media (max-width: 760px) { .flow { grid-template-columns: 1fr; } .stage-title h3 { font-size: 21px; } }
+  @media (prefers-reduced-motion: no-preference) { .badge { transition: transform .12s ease; } .badge:hover { transform: translateY(-1px); } }
+</style>
+
+<div class="wrap">
+<header>
+  <div class="eyebrow">How it works · for the video</div>
+  <h1>A fruit fly's brain plays Rational Gaze</h1>
+  <p class="lede">The real synaptic wiring of a male <i>Drosophila</i> is used as a fixed "reservoir" that learns to play Meshuggah's guitar part. The same neurons spike in a simulation you can watch, and a scanned fly body plays the notes on an Ibanez M8M. Below: the whole pipeline, what each step does in plain words, and every tool it runs on.</p>
+  <div class="stagepath">
+    <b>tab</b><span class="arrow">→</span><b>connectome reservoir</b><span class="arrow">→</span><b>read-out</b><span class="arrow">→</span><b>MIDI</b><span class="arrow">→</span><b>8ridge lite</b><span class="arrow">→</span><b>audio</b>
+    <span class="arrow">·</span><b>spikes</b><span class="arrow">→</span><b>NAVis window</b>
+    <span class="arrow">·</span><b>notes</b><span class="arrow">→</span><b>fly on stage</b>
+  </div>
+</header>
+
+<!-- ============================================================ MASTER FLOW -->
+<section>
+  <div class="sect-head">
+    <div class="eyebrow">01 · The whole pipeline</div>
+    <h2>Teacher, brain, sound, body</h2>
+    <p class="prose">Everything starts from files on the left and ends in four things on the right: a MIDI performance, a live brain window, the audio you hear, and a fly on stage. The <b>teacher</b> band is the tab; the <b>brain</b> band turns anatomy into an instrument and learns from the teacher; the <b>sound</b> band makes it audible; the <b>body</b> band makes it a show. The orange path is the one that makes the music.</p>
+  </div>
+  <figure class="fig scroller">
+    <svg viewBox="0 0 1210 676" role="img" aria-label="Pipeline diagram. Teacher band: the tab PDF is read by OMR into 1,272 notes and a piano roll that becomes the training target. Brain band: the MaleCNS connectome is pulled from neuPrint into a 2,318-neuron subgraph; the fixed reservoir plus a ridge read-out learns the piano roll and outputs a MIDI performance; the same wiring is simulated as spiking neurons in Brian2 and drawn on NAVis skeletons in a live window. Sound band: the MIDI is rendered through a Python port of the 8ridge lite sampler, using its 61 samples, with an amp model and double-tracking; the backing track is aligned to bar 1 and mixed into stems. Body band: the NeuroMechFly body and the M8M mesh are exported to glTF and animated in a three.js stage that follows the notes and spikes.">
+      <defs>
+        <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker>
+        <marker id="ah-hi" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="hi-fill"/></marker>
+        <marker id="ah-soft" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"/></marker>
+      </defs>
+      <!-- column headers -->
+      <text x="20" y="22" class="t-lane">FILES IN</text>
+      <text x="340" y="22" class="t-lane">WHAT THE CODE DOES</text>
+      <text x="960" y="22" class="t-lane">WHAT YOU GET</text>
+      <!-- band separators + labels -->
+      <line x1="20" y1="128" x2="1170" y2="128" class="lane-line"/>
+      <line x1="20" y1="352" x2="1170" y2="352" class="lane-line"/>
+      <line x1="20" y1="570" x2="1170" y2="570" class="lane-line"/>
+      <text x="1170" y="122" text-anchor="end" class="t-lane">THE TEACHER</text>
+      <text x="1170" y="346" text-anchor="end" class="t-lane">THE BRAIN</text>
+      <text x="1170" y="564" text-anchor="end" class="t-lane">THE SOUND</text>
+      <text x="1170" y="668" text-anchor="end" class="t-lane">THE BODY</text>
+
+      <!-- ===== ROW 1 · TEACHER ===== -->
+      <rect x="20" y="44" width="220" height="64" rx="8" class="box-in"/>
+      <text x="36" y="67" class="t-title">The tab (PDF)</text>
+      <text x="36" y="84" class="t-sub">tab-only Guitar Pro export</text>
+      <text x="36" y="98" class="t-sub">8-string · repeats · P.M. · bends</text>
+      <line x1="240" y1="76" x2="338" y2="76" class="edge" marker-end="url(#ah)"/>
+      <text x="246" y="68" class="t-edge">stems · beams</text>
+      <text x="246" y="94" class="t-edge">ties · repeats</text>
+
+      <rect x="340" y="44" width="200" height="64" rx="8" class="box"/>
+      <text x="356" y="67" class="t-title">Read the tab (OMR)</text>
+      <text x="356" y="84" class="t-sub">PyMuPDF · vector layer</text>
+      <text x="356" y="98" class="t-sub">78 bars → 172 played</text>
+      <line x1="540" y1="76" x2="638" y2="76" class="hi" marker-end="url(#ah-hi)"/>
+      <text x="546" y="68" class="t-edge">1,272 notes</text>
+
+      <rect x="640" y="44" width="220" height="64" rx="8" class="box-hot"/>
+      <text x="656" y="67" class="t-title">Piano roll = answer key</text>
+      <text x="656" y="84" class="t-sub">note on · note held · velocity</text>
+      <text x="656" y="98" class="t-sub">per pitch, per 64th note</text>
+      <line x1="750" y1="108" x2="750" y2="148" class="hi" marker-end="url(#ah-hi)"/>
+      <text x="756" y="132" class="t-edge">Y = targets</text>
+
+      <!-- ===== ROW 2 · BRAIN ===== -->
+      <rect x="20" y="150" width="220" height="64" rx="8" class="box-in"/>
+      <text x="36" y="173" class="t-title">MaleCNS connectome</text>
+      <text x="36" y="190" class="t-sub">neuPrint · male-cns:v1.0 · Janelia</text>
+      <text x="36" y="204" class="t-sub">~166,000 neurons, whole CNS</text>
+      <line x1="240" y1="182" x2="338" y2="182" class="edge" marker-end="url(#ah)"/>
+      <text x="246" y="174" class="t-edge">Cypher query</text>
+
+      <rect x="340" y="150" width="200" height="64" rx="8" class="box"/>
+      <text x="356" y="173" class="t-title">Pull a subgraph</text>
+      <text x="356" y="190" class="t-sub">neuprint-python · pandas</text>
+      <text x="356" y="204" class="t-sub">top-2,000 + all PAM / PPL1</text>
+      <line x1="540" y1="182" x2="638" y2="182" class="edge" marker-end="url(#ah)"/>
+      <text x="546" y="174" class="t-edge">236,870 edges</text>
+      <text x="546" y="200" class="t-edge">+ACh −GABA/Glu</text>
+
+      <rect x="640" y="150" width="220" height="64" rx="8" class="box-hot"/>
+      <text x="656" y="173" class="t-title">Reservoir + ridge read-out</text>
+      <text x="656" y="190" class="t-sub">NumPy · SciPy</text>
+      <text x="656" y="204" class="t-sub">wiring fixed · read-out trained</text>
+      <line x1="860" y1="182" x2="958" y2="182" class="hi" marker-end="url(#ah-hi)"/>
+      <text x="866" y="174" class="t-edge">peaks → notes</text>
+
+      <rect x="960" y="150" width="210" height="64" rx="8" class="box-hot"/>
+      <text x="976" y="173" class="t-title">MIDI performance</text>
+      <text x="976" y="190" class="t-sub">1,272 notes · F1 0.990</text>
+      <text x="976" y="204" class="t-sub">.mid · or live into the plugin</text>
+
+      <!-- verticals into row 3 -->
+      <line x1="440" y1="214" x2="440" y2="254" class="edge" marker-end="url(#ah)"/>
+      <text x="446" y="238" class="t-edge">2,318 IDs</text>
+      <line x1="750" y1="214" x2="750" y2="254" class="edge" marker-end="url(#ah)"/>
+      <text x="756" y="238" class="t-edge">same drums</text>
+
+      <!-- ===== ROW 3 · BRAIN (display) ===== -->
+      <rect x="340" y="256" width="200" height="64" rx="8" class="box"/>
+      <text x="356" y="279" class="t-title">3D skeletons + regions</text>
+      <text x="356" y="296" class="t-sub">NAVis · healed · pruned</text>
+      <text x="356" y="310" class="t-sub">76 brain-region meshes</text>
+
+      <rect x="640" y="256" width="220" height="64" rx="8" class="box"/>
+      <text x="656" y="279" class="t-title">Spiking simulation</text>
+      <text x="656" y="296" class="t-sub">Brian2 LIF · the same wiring</text>
+      <text x="656" y="310" class="t-sub">85 s for the whole song</text>
+      <line x1="860" y1="288" x2="958" y2="288" class="edge" marker-end="url(#ah)"/>
+      <text x="866" y="280" class="t-edge">1.7 M spikes</text>
+
+      <rect x="960" y="256" width="210" height="64" rx="8" class="box"/>
+      <text x="976" y="279" class="t-title">Live brain window</text>
+      <text x="976" y="296" class="t-sub">octarine · pygfx · wgpu</text>
+      <text x="976" y="310" class="t-sub">yellow → red → blue fade</text>
+      <path d="M440,320 L440,336 L1010,336 L1010,322" class="edge-soft" marker-end="url(#ah-soft)"/>
+      <text x="600" y="330" class="t-edge">skeleton geometry</text>
+
+      <!-- MIDI → sampler, around the right margin -->
+      <path d="M1170,198 L1190,198 L1190,368 L750,368 L750,390" class="hi" marker-end="url(#ah-hi)"/>
+      <text x="1000" y="384" class="t-edge">notes to play</text>
+
+      <!-- ===== ROW 4 · SOUND ===== -->
+      <rect x="20" y="392" width="220" height="64" rx="8" class="box-in"/>
+      <text x="36" y="415" class="t-title">Backing track (mp3)</text>
+      <text x="36" y="432" class="t-sub">yours · drums + bass</text>
+      <text x="36" y="446" class="t-sub">aligned by onset cross-correlation</text>
+      <line x1="240" y1="424" x2="338" y2="424" class="edge" marker-end="url(#ah)"/>
+      <text x="246" y="416" class="t-edge">audio</text>
+
+      <rect x="340" y="392" width="200" height="64" rx="8" class="box"/>
+      <text x="356" y="415" class="t-title">Align to bar 1</text>
+      <text x="356" y="432" class="t-sub">spectral-flux onsets</text>
+      <text x="356" y="446" class="t-sub">bar 1 @ 0.28 s · 133.00 BPM</text>
+      <line x1="540" y1="424" x2="638" y2="424" class="edge" marker-end="url(#ah)"/>
+      <text x="546" y="416" class="t-edge">offset + BPM</text>
+
+      <rect x="640" y="392" width="220" height="64" rx="8" class="box-hot"/>
+      <text x="656" y="415" class="t-title">Sampler port + amp + mix</text>
+      <text x="656" y="432" class="t-sub">8ridge lite engine, in Python</text>
+      <text x="656" y="446" class="t-sub">double-tracked · P.M. where marked</text>
+      <line x1="860" y1="424" x2="958" y2="424" class="hi" marker-end="url(#ah-hi)"/>
+      <text x="866" y="416" class="t-edge">render</text>
+
+      <rect x="960" y="392" width="210" height="64" rx="8" class="box-hot"/>
+      <text x="976" y="415" class="t-title">Audio stems + mix</text>
+      <text x="976" y="432" class="t-sub">guitar L/R · backing · drums</text>
+      <text x="976" y="446" class="t-sub">48 kHz stereo · live toggles</text>
+
+      <!-- ===== ROW 5 · SOUND (samples) ===== -->
+      <rect x="20" y="486" width="220" height="64" rx="8" class="box-in"/>
+      <text x="36" y="509" class="t-title">8ridge lite samples</text>
+      <text x="36" y="526" class="t-sub">61 guitar WAVs, E1–E6</text>
+      <text x="36" y="540" class="t-sub">GPL-3 JUCE plugin (JamesStubbsEng)</text>
+      <path d="M240,518 L750,518 L750,458" class="edge" marker-end="url(#ah)"/>
+      <text x="300" y="510" class="t-edge">one WAV per semitone</text>
+
+      <!-- ===== ROW 6 · BODY ===== -->
+      <rect x="20" y="606" width="105" height="32" rx="6" class="box-in"/>
+      <text x="30" y="627" class="t-mono">NeuroMechFly</text>
+      <rect x="135" y="606" width="105" height="32" rx="6" class="box-in"/>
+      <text x="145" y="627" class="t-mono">M8M mesh (OBJ)</text>
+      <line x1="240" y1="622" x2="338" y2="622" class="edge" marker-end="url(#ah)"/>
+      <text x="246" y="614" class="t-edge">MJCF · OBJ</text>
+
+      <rect x="340" y="590" width="200" height="64" rx="8" class="box"/>
+      <text x="356" y="613" class="t-title">Export stage assets</text>
+      <text x="356" y="630" class="t-sub">trimesh → glTF</text>
+      <text x="356" y="644" class="t-sub">fret wires measured by ray-cast</text>
+      <line x1="540" y1="622" x2="958" y2="622" class="edge" marker-end="url(#ah)"/>
+      <text x="560" y="614" class="t-edge">fly.glb · guitar.glb · brain.bin · notes.json · spikes.bin</text>
+
+      <rect x="960" y="590" width="210" height="64" rx="8" class="box"/>
+      <text x="976" y="613" class="t-title">3D stage in the browser</text>
+      <text x="976" y="630" class="t-sub">three.js · WebAudio · WebSocket</text>
+      <text x="976" y="644" class="t-sub">IK arms · fret marker · hologram</text>
+    </svg>
+    <figcaption>Left to right: files → code → things you see and hear. The orange path makes the music: tab → piano roll → the read-out on the fixed connectome → MIDI → 8ridge lite sampler → stems. The stage and the brain window are fed from the same notes and spikes (the exported files on the bottom arrow), so at show time all three move to one clock (section 04).</figcaption>
+    <div class="legend"><span><i class="l-hi"></i>the music path</span><span><i class="l-solid"></i>data flow</span><span><i class="l-dash"></i>reused for display</span></div>
+  </figure>
+</section>
+
+<!-- ============================================================ STAGES -->
+<section>
+  <div class="sect-head">
+    <div class="eyebrow">02 · Step by step</div>
+    <h2>What actually happens at each box</h2>
+    <p class="prose">Each step below reads the same way: what goes in, what the code does with it (in plain words, then the real mechanism), and what comes out. Badges name the library or framework doing the work.</p>
+  </div>
+
+  <div class="stage">
+    <div class="stage-title"><span class="num">STEP 1</span><h3>Pull the brain</h3><span class="plain">"download the wiring diagram"</span></div>
+    <div class="flow">
+      <div class="cell in"><span class="lbl">Goes in</span><p><b>MaleCNS</b>, the complete EM reconstruction of a male fruit fly's brain and nerve cord (~166,000 neurons), served by the neuPrint graph database with your API token.</p></div>
+      <div class="cell do"><span class="lbl">What happens</span><p>A Cypher query asks for the <b>2,000 most connected central-brain neurons</b> plus <b>every PAM / PPL1 dopaminergic neuron</b> (332 — the fly's reward and punishment cells), then every synaptic connection <i>between</i> them. Cached to parquet so it's pulled once.</p></div>
+      <div class="cell out"><span class="lbl">Comes out</span><p><b>2,318 neurons · 236,870 connections · 3.6 M synapses</b> — each edge has a synapse count and each neuron a predicted neurotransmitter, cell type and 3D soma position.</p></div>
+    </div>
+    <div class="tools"><span class="lbl">Tools</span><span class="badge py">neuprint-python</span><span class="badge py">pandas</span><span class="badge py">pyarrow</span><span class="badge data">neuPrint / neo4j (Janelia)</span><span class="badge data">MaleCNS v1.0 (CC-BY)</span></div>
+  </div>
+
+  <div class="stage">
+    <div class="stage-title"><span class="num">STEP 2</span><h3>Turn the wiring into an instrument</h3><span class="plain">"the brain is a pond; we learn to read its ripples"</span></div>
+    <div class="flow">
+      <div class="cell in"><span class="lbl">Goes in</span><p>The connection matrix <b>W</b>: every edge weighted <code>1 + log(synapses)</code>, signed <b>+</b> for acetylcholine, <b>−</b> for GABA and glutamate (a simplification — real sign depends on the receptor). Plus a "drummer": three pulse streams.</p></div>
+      <div class="cell do"><span class="lbl">What happens</span><p>Every neuron updates as <code>x ← (1−a)·x + a·tanh(W·x + input)</code>. Nothing inside W is trained — only a global gain and a spread of time constants (a 32nd note to a whole riff cycle). This is <b>reservoir computing</b>: a fixed nonlinear system whose response to the drums is rich enough to decode a song from.</p></div>
+      <div class="cell out"><span class="lbl">Comes out</span><p>A state matrix of <b>11,008 timesteps × 2,318 neurons</b> (one row per 64th note of the song) — the "ripples" the read-out reads.</p></div>
+    </div>
+    <div class="tools"><span class="lbl">Tools</span><span class="badge py">NumPy</span><span class="badge py">SciPy sparse</span></div>
+    <p class="note"><b>The drummer (inputs):</b> ① the 4/4 drum pulse (quarter notes, downbeat, snare on 3); ② the riff cycle — Rational Gaze's 25/16-over-4/4 polymeter, with phrase boundaries taken from the tab's repeat structure; ③ the song form (which section, how far through it). Each stream carries a Fourier "phase code" (sines and cosines of where-in-the-bar). Without those codes the brain's activity collapsed to a rank-20 blob and accuracy stalled at 80 %.</p>
+  </div>
+
+  <div class="stage">
+    <div class="stage-title"><span class="num">STEP 3</span><h3>Read the tab</h3><span class="plain">"turn a PDF into note events"</span></div>
+    <div class="flow">
+      <div class="cell in"><span class="lbl">Goes in</span><p>A tab-only PDF (Guitar Pro export): fret numbers on 8 lines, rhythm drawn as <b>stems, beams, dots and rests</b>, ties, repeat signs, 1st/2nd endings, "3x", P.M. marks, ½ bends.</p></div>
+      <div class="cell do"><span class="lbl">What happens</span><p>A small optical-music-recognition step reads the PDF's <b>vector layer</b>: fret numbers from the text (string = which staff line), durations from beam levels (8th / 16th), dot glyphs, rest glyphs; parenthesised numbers and hidden-number stems are ties. Every bar is checked to add up to 16 sixteenths; repeats are expanded.</p></div>
+      <div class="cell out"><span class="lbl">Comes out</span><p><b>78 written bars → 172 played bars, 1,272 notes</b> at 133 BPM in F standard — mostly open low F and F♯ at fret 13, the "minor-ninth leap" the analyses describe.</p></div>
+    </div>
+    <div class="tools"><span class="lbl">Tools</span><span class="badge py">PyMuPDF</span><span class="badge py">PyGuitarPro (.gp3–5)</span><span class="badge py">custom gpif parser (.gp)</span></div>
+  </div>
+
+  <div class="stage">
+    <div class="stage-title"><span class="num">STEP 4</span><h3>Teach it the song — "tracing paper"</h3><span class="plain">"one equation, four seconds"</span></div>
+    <div class="flow">
+      <div class="cell in"><span class="lbl">Goes in</span><p>The state matrix <b>X</b> from step 2 and the tab as a piano roll <b>Y</b> (note-on, note-held, velocity per pitch per 64th note).</p></div>
+      <div class="cell do"><span class="lbl">What happens</span><p><b>Ridge regression</b>: <code>W_out = (XᵀX + λI)⁻¹ XᵀY</code>. One closed-form solve — no backprop through the brain. Then the same drums are replayed, the read-out's output is thresholded into note events (chords allowed) and written as MIDI.</p></div>
+      <div class="cell out"><span class="lbl">Comes out</span><p>Onset <b>F1 0.990, pitch accuracy 1.000</b> — 1,272 of 1,272 notes. Honest framing: this is <i>memorising</i> the song through the brain's dynamics; the connectome is the medium, the read-out is the tracing paper.</p></div>
+    </div>
+    <div class="tools"><span class="lbl">Tools</span><span class="badge py">SciPy (Cholesky solve)</span><span class="badge py">pretty_midi</span></div>
+    <p class="note"><b>Who wrote the notes?</b> The piano roll the reader learns from is the tab, converted by code (note on / held / velocity per 64th note). The MIDI that comes out is decoded from the simulated brain's activity through the trained reader — so mechanically the brain produces it, but its information content is the tab's. <b>And the fly's wiring is not what makes it work</b> (<code>cli controls</code>, <code>output/controls.json</code>): with the same inputs, targets and fit, the connectome with its synaptic partners shuffled scores F1 0.995, a random network of the same size 0.996, the real wiring 0.990, the inputs alone with no brain 0.000, and a 10× smaller random network 0.087. Stage A needs <i>a</i> large fixed nonlinear reservoir; the fly's is a fine one, not a special one. The connectome is the medium the song is written on, not the composer.</p>
+  </div>
+
+  <div class="stage">
+    <div class="stage-title"><span class="num">STEP 5</span><h3>Let it improvise — "good-dog treats"</h3><span class="plain">"reward goes in through the fly's real dopamine neurons"</span></div>
+    <div class="flow">
+      <div class="cell in"><span class="lbl">Goes in</span><p>The trained model, a 16-bar excerpt, and a "does it still groove?" score: autocorrelation at the 25-sixteenth lag, low-string focus, chug ratio, density, syncopation, pitch vocabulary, and a <b>novelty band</b> (deviate from the memorised riff — but not too far).</p></div>
+      <div class="cell do"><span class="lbl">What happens</span><p>An evolution strategy (<b>CMA-ES</b>) jitters a few knobs — input gains, a small (rank-8) tweak to the read-out, and how strongly a scalar reward is injected into the <b>PAM (+) and PPL1 (−) neurons</b>, the fly's own reinforcement pathway — and keeps the jitters that score higher.</p></div>
+      <div class="cell out"><span class="lbl">Comes out</span><p>A second model whose take deviates from the tab while keeping the groove (fitness 0.701 → 0.726). Small, but it's the only genuinely creative step — say so.</p></div>
+    </div>
+    <div class="tools"><span class="lbl">Tools</span><span class="badge py">cma (CMA-ES)</span><span class="badge py">NumPy</span><span class="badge py">multiprocessing (live planner + 3 workers)</span></div>
+    <p class="note"><b>Is this reinforcement learning?</b> It solves an RL problem — try, get a scalar reward, no teacher gives the right notes — but with an evolution strategy over a dozen knobs rather than per-note decisions, a value function or a gradient. And the dopamine current only <i>modulates</i> activity: no synapse in the connectome changes, so say "reward enters through the fly's real reward neurons", not "the fly's brain learns from dopamine".</p>
+    <p class="note"><b>Live version (<code>play --improvise</code>):</b> the same search runs <i>during</i> the performance. While the fly plays an 8-bar phrase, a planner process with four workers auditions ~60–140 candidate versions of the <i>next</i> phrase through the brain (from the exact state it will be in at the boundary), commits the best one 2.5 s before the boundary, renders it through the sampler into the guitar stem that is already streaming, sends the notes to the fingers and the live spiking brain, and injects the phrase's treat into the PAM/PPL1 neurons for the phrase after. The first phrase is always the faithful replay; a <b>Live learning</b> button on the stage switches improvisation on and off at the next boundary. Every performance is a different take.</p>
+    <p class="note"><b>The knobs are musical.</b> A candidate is nine numbers, and every one transforms the <i>inputs</i> the brain is driven with, never the read-out: how hard the drum / riff / form streams hit the brain; the dopamine gain; a <b>polymetric displacement</b> of the riff against the drum grid; a <b>stretch</b> of the riff cycle (a new polymeter — 23/16, 27/16…); a <b>blend</b> of another section's identity into the form stream; and the decode threshold. An earlier version shoved the read-out weights randomly and produced off-grid blips and wrong notes; now the read-out stays on ground it knows. Guard-rails on top: pitches masked to the section's vocabulary, 16th grid, note count near the tab's, the tab's velocity, and a score that rewards keeping the section's chug/leap mix. One knob, <code>--wildness</code>, sets how far it may stray.</p>
+    <p class="note"><b>👍 / 👎 — you are part of the reward.</b> Press K / J on the stage (or + / − in the brain window) while a phrase plays: the vote adds to the treat going into the dopamine neurons for the next phrase, re-weights the scorer toward the features of the phrase you liked (the HUD shows the drift as "taste"), and nudges the search toward the liked knobs. Over a show the fly learns the listener's taste — a real reinforcement signal, not a heuristic.</p>
+  </div>
+
+  <div class="stage">
+    <div class="stage-title"><span class="num">STEP 6</span><h3>Make it sound like an 8-string</h3><span class="plain">"the plugin, rebuilt in Python, plus an amp"</span></div>
+    <div class="flow">
+      <div class="cell in"><span class="lbl">Goes in</span><p>The MIDI from step 4 and <b>8ridge lite</b>'s 61 recorded guitar samples (one per semitone, E1–E6, "Natural" and "Tuned" sets) — an open-source JUCE plugin.</p></div>
+      <div class="cell do"><span class="lbl">What happens</span><p>Its sampler engine is ported line-for-line: pitch ratio, linear interpolation, 5 ms / 10 ms envelopes, velocity gain, retrigger release, even its quirk of layering a re-pitched E1 under F1–G2. Then, not part of the plugin: an amp + 4×12 cab model, palm mutes only where the tab says <b>P.M.</b>, and <b>double-tracking</b> — Natural set left, Tuned set 7 ms late right.</p></div>
+      <div class="cell out"><span class="lbl">Comes out</span><p>Wide-stereo guitar stem, synth-drum stem, your backing track aligned (bar 1 at <b>0.28 s, 133.00 BPM</b> by onset cross-correlation), and the mix.</p></div>
+    </div>
+    <div class="tools"><span class="lbl">Tools</span><span class="badge py">NumPy</span><span class="badge py">SciPy signal (biquads)</span><span class="badge py">soundfile / libsndfile</span><span class="badge data">8ridge lite (JamesStubbsEng, GPL-3)</span><span class="badge py">mido · python-rtmidi (live MIDI out)</span></div>
+  </div>
+
+  <div class="stage">
+    <div class="stage-title"><span class="num">STEP 7</span><h3>Watch the neurons fire</h3><span class="plain">"a second simulation of the same wiring, drawn on the real cell shapes"</span></div>
+    <div class="flow">
+      <div class="cell in"><span class="lbl">Goes in</span><p>The same 236,870 connections, the same drummer streams, plus a "the fly hears itself" stream from the notes it plays; and the 3D skeleton of every one of the 2,318 neurons.</p></div>
+      <div class="cell do"><span class="lbl">What happens</span><p><b>Leaky integrate-and-fire</b> neurons with exponential synapses (inhibition 4× stronger, for balance) run in <b>Brian2</b> for the whole song. Skeletons are fetched with <b>NAVis</b>, healed, Strahler-pruned and downsampled; all of them are drawn as one GPU line whose colour comes from each neuron's last-spike time — yellow → red → blue as it fades.</p></div>
+      <div class="cell out"><span class="lbl">Comes out</span><p><b>1.7 M spikes at ~2.4 Hz per neuron</b>, population rate correlating 0.57 with the chugs — the brain visibly pulses with the riff. Magenta halos mark the dopaminergic cells; translucent shells are 76 brain regions.</p></div>
+    </div>
+    <div class="tools"><span class="lbl">Tools</span><span class="badge py">Brian2</span><span class="badge py">NAVis</span><span class="badge py">octarine · pygfx · wgpu (Vulkan)</span><span class="badge py">trimesh</span></div>
+  </div>
+
+  <div class="stage">
+    <div class="stage-title"><span class="num">STEP 8</span><h3>Put a fly on stage</h3><span class="plain">"a scanned fly, real joints, your guitar"</span></div>
+    <div class="flow">
+      <div class="cell in"><span class="lbl">Goes in</span><p><b>NeuroMechFly</b> (EPFL): a micro-CT scan of a real fly with 70 articulated parts and hinge joints; your <b>Ibanez M8M</b> mesh with PBR textures; the notes with the tab's fingering; the spike raster.</p></div>
+      <div class="cell do"><span class="lbl">What happens</span><p>The body becomes a glTF with the same joint tree; the guitar mesh is measured (bridge, nut, string plane, all 24 fret wires by ray-casting). Each front leg is solved as a planar arm: elbow by two-bone IK, the fretting wrist <b>under the neck</b> with fingers curling up onto the fret, the picking wrist over the top edge with the hand hanging onto the strings. Head-bangs on kick/snare; wings flare on accents; the brain floats as a hologram.</p></div>
+      <div class="cell out"><span class="lbl">Comes out</span><p>A browser page at 60 fps: the fly plays every note on the real fret, with stem toggles (fly guitar / backing / drums), camera presets and a placement mode for the guitar.</p></div>
+    </div>
+    <div class="tools"><span class="lbl">Tools</span><span class="badge js">three.js (WebGL)</span><span class="badge js">WebAudio</span><span class="badge js">GLSL shader (brain glow)</span><span class="badge py">trimesh (glTF export)</span><span class="badge data">NeuroMechFly / flygym (Apache-2.0)</span></div>
+  </div>
+
+  <div class="stage">
+    <div class="stage-title"><span class="num">STEP 9</span><h3>Many songs → riffs of its own</h3><span class="plain">"ask the brain for a section that never existed"</span></div>
+    <div class="flow">
+      <div class="cell in"><span class="lbl">Goes in</span><p>A folder of djent <b>tabs</b> — 11 Guitar Pro files: Meshuggah, Monuments, Periphery, Unprocessed (the fly learns from transcriptions, not audio). The rhythm-guitar track is picked automatically; every song is transposed so its lowest open string is the fly's low F, so riff shapes survive and the 8-string on stage stays right.</p></div>
+      <div class="cell do"><span class="lbl">What happens</span><p><b>One reader for all songs.</b> Each song's sections get a fixed 16-number <b>section code</b> instead of a per-song one-hot, and the reader is fitted to each song's 16 most characteristic bars of riff. A linear reader of 2,318 neurons holds about one song (11 whole songs: F1 0.02) — so this reader also gets 4,000 random tanh features of the <i>same</i> neuron states: still reading the brain, with a bigger pen → <b>F1 0.96 across the 11 riffs</b>. To generate, the brain is driven with a bar grid, a riff cycle of your choice (23/16, 25/16…) and a section identity that is a <b>blend of two learned codes</b> — material the reader was never shown. The knobs, the treats and your 👍/👎 steer it.</p></div>
+      <div class="cell out"><span class="lbl">Comes out</span><p>Live: <code>play --generate</code> (the <b>🎸 Own riffs</b> button) — the fly plays riffs it makes up over <b>its own drums</b>: hats keep the tempo, the kick doubles every chug, the snare sits on 2 &amp; 4 or in thirds. Offline: <code>cli generate</code> → MIDI + WAV. Honest framing: interpolations of what it learned, graded by a groove heuristic and by you — "made from its synapses" in the sense that the fixed wiring shapes how the learned riffs mix.</p></div>
+    </div>
+    <div class="tools"><span class="lbl">Tools</span><span class="badge py">corpus.py (transpose · riff excerpts · section codes · Gram accumulation)</span><span class="badge py">gpif.py auto track pick</span><span class="badge py">random tanh feature expansion</span><span class="badge py">cma</span><span class="badge py">8ridge lite port + procedural drums</span></div>
+  </div>
+</section>
+
+<!-- ============================================================ RESERVOIR MECHANISM -->
+<section>
+  <div class="sect-head">
+    <div class="eyebrow">03 · The core idea, drawn</div>
+    <h2>Fixed brain, trained read-out</h2>
+    <p class="prose">This is the one diagram to pause on in the video. The drums go into three separate groups of neurons; the connectome does the mixing (nothing in it changes); the only thing that learns is the thin read-out layer on the right, fitted with one equation.</p>
+  </div>
+  <figure class="fig scroller">
+    <svg viewBox="0 0 1000 360" role="img" aria-label="Reservoir mechanism: three input streams (4/4 drum pulse, 25/16 riff cycle, song form) feed three neuron populations inside the fixed connectome; the recurrent connections mix them; a ridge-regression read-out, the only trained part, maps the neuron states to a piano roll that becomes MIDI. Stage B injects a reward signal into the dopaminergic neurons.">
+      <defs>
+        <marker id="ah2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker>
+        <marker id="ah2-hi" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="hi-fill"/></marker>
+      </defs>
+      <!-- inputs -->
+      <text x="20" y="28" class="t-lane">THE DRUMMER (inputs)</text>
+      <rect x="20" y="50" width="220" height="54" rx="8" class="box-in"/>
+      <text x="34" y="72" class="t-title">4/4 drum pulse</text>
+      <text x="34" y="90" class="t-sub">kick · snare on 3 · + phase code</text>
+      <rect x="20" y="130" width="220" height="54" rx="8" class="box-in"/>
+      <text x="34" y="152" class="t-title">Riff cycle (25/16)</text>
+      <text x="34" y="170" class="t-sub">tab phrase starts · + phase code</text>
+      <rect x="20" y="210" width="220" height="54" rx="8" class="box-in"/>
+      <text x="34" y="232" class="t-title">Song form</text>
+      <text x="34" y="250" class="t-sub">which section · how far through it</text>
+      <!-- reservoir -->
+      <text x="320" y="28" class="t-lane">THE CONNECTOME (fixed)</text>
+      <rect x="320" y="44" width="340" height="236" rx="14" class="box"/>
+      <text x="490" y="66" text-anchor="middle" class="t-title">2,318 real neurons</text>
+      <text x="490" y="82" text-anchor="middle" class="t-sub">236,870 connections · + ACh, − GABA/Glu · never edited</text>
+      <!-- populations -->
+      <g fill="var(--blue)">
+        <circle cx="360" cy="120" r="4"/><circle cx="376" cy="112" r="4"/><circle cx="372" cy="132" r="4"/><circle cx="390" cy="124" r="4"/><circle cx="362" cy="104" r="4"/>
+      </g>
+      <g fill="var(--accent)">
+        <circle cx="360" cy="176" r="4"/><circle cx="376" cy="168" r="4"/><circle cx="372" cy="188" r="4"/><circle cx="390" cy="180" r="4"/><circle cx="362" cy="160" r="4"/>
+      </g>
+      <g fill="var(--gold)">
+        <circle cx="360" cy="232" r="4"/><circle cx="376" cy="224" r="4"/><circle cx="372" cy="244" r="4"/><circle cx="390" cy="236" r="4"/><circle cx="362" cy="216" r="4"/>
+      </g>
+      <text x="404" y="124" class="t-sub">30 % of neurons</text>
+      <text x="404" y="180" class="t-sub">another 30 %</text>
+      <text x="404" y="236" class="t-sub">another 30 %</text>
+      <!-- the rest / recurrence -->
+      <g fill="var(--muted)" opacity=".7">
+        <circle cx="540" cy="130" r="3"/><circle cx="565" cy="150" r="3"/><circle cx="590" cy="128" r="3"/><circle cx="620" cy="160" r="3"/><circle cx="550" cy="190" r="3"/>
+        <circle cx="600" cy="200" r="3"/><circle cx="575" cy="225" r="3"/><circle cx="630" cy="232" r="3"/><circle cx="550" cy="250" r="3"/><circle cx="610" cy="256" r="3"/><circle cx="645" cy="195" r="3"/>
+      </g>
+      <path d="M540,130 L565,150 L590,128 L620,160 L600,200 L575,225 L550,190 L540,130 M600,200 L630,232 L610,256 L550,250 L575,225 M620,160 L645,195 L630,232" class="edge-soft" opacity=".6"/>
+      <path d="M480,126 C510,104 610,104 632,146" class="edge" marker-end="url(#ah2)"/>
+      <text x="520" y="96" class="t-edge">W · x  (the mixing)</text>
+      <text x="330" y="268" class="t-sub">each neuron:  x ← (1−a)·x + a·tanh(W·x + input)</text>
+      <!-- input arrows -->
+      <line x1="240" y1="77" x2="354" y2="112" class="edge" marker-end="url(#ah2)"/>
+      <line x1="240" y1="157" x2="354" y2="172" class="edge" marker-end="url(#ah2)"/>
+      <line x1="240" y1="237" x2="354" y2="230" class="edge" marker-end="url(#ah2)"/>
+      <!-- read-out -->
+      <text x="740" y="28" class="t-lane">THE READ-OUT (trained)</text>
+      <rect x="740" y="44" width="240" height="120" rx="8" class="box-hot"/>
+      <text x="754" y="68" class="t-title">Ridge regression</text>
+      <text x="754" y="88" class="t-mono" fill="var(--ink-2)">W_out = (XᵀX + λI)⁻¹ XᵀY</text>
+      <text x="754" y="112" class="t-sub">2,318 states → 122 targets per step</text>
+      <text x="754" y="130" class="t-sub">(on · held · velocity, per pitch)</text>
+      <text x="754" y="152" class="t-sub" fill="var(--accent-ink)">only this learns · one solve · 4 s</text>
+      <path d="M660,110 L738,110" class="hi" marker-end="url(#ah2-hi)"/>
+      <text x="666" y="100" class="t-edge">all 2,318</text>
+      <text x="666" y="124" class="t-edge">activities</text>
+      <!-- output -->
+      <rect x="740" y="200" width="240" height="80" rx="8" class="box"/>
+      <text x="754" y="224" class="t-title">Piano roll → MIDI</text>
+      <text x="754" y="244" class="t-sub">peaks → note events (chords allowed)</text>
+      <text x="754" y="262" class="t-sub">1,272 notes · F1 0.990 · pitch 1.000</text>
+      <path d="M860,164 L860,198" class="hi" marker-end="url(#ah2-hi)"/>
+      <!-- reward note -->
+      <rect x="320" y="296" width="660" height="48" rx="6" class="box-in"/>
+      <text x="334" y="316" class="t-sub"><tspan fill="var(--magenta)" font-weight="600">Stage B: </tspan>a reward signal is injected into the 332 PAM (+) / PPL1 (−) dopaminergic neurons inside the box;</text>
+      <text x="334" y="334" class="t-sub">CMA-ES then tunes input gains + a small read-out tweak so the take deviates from the tab but keeps the groove.</text>
+    </svg>
+    <figcaption>Pond analogy: the drummer taps the water (left), the connectome is the water (middle, fixed), and the read-out learns where to look at the ripples (right). The training data is the tab's piano roll; nothing inside the brain is modified.</figcaption>
+  </figure>
+</section>
+
+<!-- ============================================================ LIVE SHOW -->
+<section>
+  <div class="sect-head">
+    <div class="eyebrow">04 · Show time</div>
+    <h2>One clock drives everything</h2>
+    <p class="prose">When you run <code>play</code>, the audio card's DAC time is the master clock. Every frame, the conductor reads that time and moves the three displays in lockstep — so the spikes you see and the fingers you watch are at the same moment you hear.</p>
+  </div>
+  <figure class="fig scroller">
+    <svg viewBox="0 0 980 300" role="img" aria-label="Runtime diagram: the audio clock from sounddevice drives three outputs — the NAVis brain window fed by the spike raster or a live LIF simulation, the browser stage fed over a WebSocket at 30 messages per second with time, spikes and note onsets, and an optional MIDI port that drives the real 8ridge lite plugin in a DAW.">
+      <defs>
+        <marker id="ah3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker>
+        <marker id="ah3-soft" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"/></marker>
+      </defs>
+      <!-- stems -->
+      <rect x="20" y="40" width="190" height="54" rx="8" class="box-in"/>
+      <text x="34" y="62" class="t-title">Stems</text>
+      <text x="34" y="80" class="t-sub">guitar L/R · backing · drums</text>
+      <text x="34" y="116" class="t-sub">G / B / D keys mute each stem live</text>
+      <!-- clock -->
+      <rect x="290" y="30" width="230" height="74" rx="10" class="box-hot"/>
+      <text x="405" y="56" text-anchor="middle" class="t-title">Audio clock</text>
+      <text x="405" y="74" text-anchor="middle" class="t-sub">sounddevice → DAC time of the sample</text>
+      <text x="405" y="92" text-anchor="middle" class="t-sub">playing right now = song time t</text>
+      <line x1="210" y1="67" x2="288" y2="67" class="edge" marker-end="url(#ah3)"/>
+      <text x="216" y="59" class="t-edge">mix live</text>
+      <!-- three outputs -->
+      <rect x="20" y="180" width="270" height="90" rx="8" class="box"/>
+      <text x="34" y="204" class="t-title">Brain window (NAVis / octarine)</text>
+      <text x="34" y="224" class="t-sub">default: replay the Brian2 raster up to t</text>
+      <text x="34" y="242" class="t-sub">--live: step a numpy LIF to t each frame</text>
+      <text x="34" y="260" class="t-sub">glow fades with τ = 0.18 s</text>
+      <path d="M340,104 L340,140 L155,140 L155,178" class="edge" marker-end="url(#ah3)"/>
+      <text x="165" y="131" class="t-edge">t → spikes since last frame</text>
+
+      <rect x="355" y="180" width="270" height="90" rx="8" class="box"/>
+      <text x="369" y="204" class="t-title">Browser stage (three.js)</text>
+      <text x="369" y="224" class="t-sub">WebSocket, 30 msgs/s:</text>
+      <text x="369" y="242" class="t-mono" fill="var(--ink-2)">{ t, spikes[], notes[] }</text>
+      <text x="369" y="260" class="t-sub">or standalone: WebAudio plays the stems itself</text>
+      <path d="M405,104 L405,178" class="edge" marker-end="url(#ah3)"/>
+      <text x="399" y="160" text-anchor="end" class="t-edge">ws://localhost:8765</text>
+
+      <rect x="690" y="180" width="270" height="90" rx="8" class="box"/>
+      <text x="704" y="204" class="t-title">MIDI out (optional)</text>
+      <text x="704" y="224" class="t-sub">note on/off scheduled to song time</text>
+      <text x="704" y="242" class="t-sub">→ loopMIDI → the real 8ridge lite</text>
+      <text x="704" y="260" class="t-sub">plugin in a DAW (local guitar stem muted)</text>
+      <path d="M470,104 L470,140 L825,140 L825,178" class="edge-soft" marker-end="url(#ah3-soft)"/>
+      <text x="600" y="133" class="t-edge">mido · python-rtmidi</text>
+      <!-- fly reaction -->
+      <text x="369" y="290" class="t-sub">stage: notes → fret marker + finger targets · spikes → hologram · kicks/snares → head-bang</text>
+    </svg>
+    <figcaption>The conductor (<code>player.py</code>) owns the clock. The brain window and the stage never guess the time — they are told it, so replaying the raster, stepping a live simulation, or driving the real plugin all stay in sync with what's coming out of the speakers. With <code>--improvise</code> a fourth box hangs off the clock: the planner process (<code>live.py</code>) that writes the next phrase into the guitar stem before the playhead reaches it, and reports candidates / winner / treat to the stage's HUD over the same WebSocket (which now also carries commands back: the Live-learning and stem buttons).</figcaption>
+  </figure>
+</section>
+
+<!-- ============================================================ REAL VS MODELLED -->
+<section>
+  <div class="sect-head">
+    <div class="eyebrow">05 · Say this in the video</div>
+    <h2>What's real and what's a model</h2>
+    <p class="prose">The project is more impressive when the claims are precise. Everything in the left column is measured biology or a real file; everything on the right is an engineering choice layered on top.</p>
+  </div>
+  <div class="scroller">
+  <table>
+    <thead><tr><th>Component</th><th>Real</th><th>Modelled</th></tr></thead>
+    <tbody>
+      <tr><td><b>Wiring</b></td><td class="real"><span class="pill real">real</span> every neuron and every synapse count comes from the MaleCNS EM reconstruction; nothing is added or removed</td><td class="model"><span class="pill model">model</span> edge weight = 1 + log(synapses); sign from predicted neurotransmitter (ACh +, GABA/Glu −); one global gain</td></tr>
+      <tr><td><b>Neuron dynamics</b></td><td class="real"><span class="pill real">real</span> cell types, transmitters, 3D shapes, dopaminergic identity (PAM/PPL1)</td><td class="model"><span class="pill model">model</span> tanh rate units (composer) and leaky integrate-and-fire units (display); time constants chosen for music</td></tr>
+      <tr><td><b>The song</b></td><td class="real"><span class="pill real">real</span> the tab you supplied, read note-for-note; your backing track, aligned</td><td class="model"><span class="pill model">model</span> Stage A memorises it through the reservoir (F1 0.990); Stage B is the only creative part and it is small</td></tr>
+      <tr><td><b>The sound</b></td><td class="real"><span class="pill real">real</span> 8ridge lite's recorded 8-string samples, its engine ported faithfully</td><td class="model"><span class="pill model">model</span> amp/cab approximation, palm-mute gating, double-tracking, synth drum kit</td></tr>
+      <tr><td><b>The spikes you see</b></td><td class="real"><span class="pill real">real</span> the same 236,870 connections and the real 3D skeletons</td><td class="model"><span class="pill model">model</span> a Brian2 simulation driven by the drums — not a recording from a fly</td></tr>
+      <tr><td><b>The fly</b></td><td class="real"><span class="pill real">real</span> NeuroMechFly micro-CT body with its real joint tree; your M8M mesh</td><td class="model"><span class="pill model">model</span> the guitarist posture, IK, head-bangs and wing flares are animation</td></tr>
+      <tr><td><b>Its own riffs</b></td><td class="real"><span class="pill real">real</span> 11 real djent tabs, transposed; the same fixed brain; your 👍/👎</td><td class="model"><span class="pill model">model</span> a two-layer reader (random tanh features of the neuron states) fitted to riff excerpts; new riffs are interpolations between learned section codes, filtered by guard-rails and graded by a heuristic — "generated from its synapses" only in the sense that the wiring shapes the mixing</td></tr>
+      <tr><td><b>Does the fly's wiring matter?</b></td><td class="real"><span class="pill real">measured</span> real wiring F1 0.990 · shuffled partners 0.995 · random same-size network 0.996 · inputs alone 0.000 · 10× smaller random 0.087 (<code>output/controls.json</code>)</td><td class="model"><span class="pill model">so</span> the specific fly wiring is not the source of the music — any large fixed nonlinear reservoir works; the connectome is the medium, the tab is the content, the reader is the only thing that learned</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- ============================================================ NUMBERS -->
+<section>
+  <div class="sect-head">
+    <div class="eyebrow">06 · Numbers worth saying out loud</div>
+    <h2>The figures</h2>
+  </div>
+  <div class="numbers">
+    <div class="num-tile"><span class="v">2,318</span><span class="k">neurons used (of ~166,000 in the fly)</span></div>
+    <div class="num-tile"><span class="v">236,870</span><span class="k">synaptic connections between them</span></div>
+    <div class="num-tile"><span class="v">3.6 M</span><span class="k">synapses those connections carry</span></div>
+    <div class="num-tile"><span class="v">332</span><span class="k">dopaminergic PAM/PPL1 neurons (reward site)</span></div>
+    <div class="num-tile"><span class="v">0.990</span><span class="k">onset F1 of the replay · pitch 1.000</span></div>
+    <div class="num-tile"><span class="v">1,272</span><span class="k">notes, 172 bars, 133 BPM, F standard</span></div>
+    <div class="num-tile"><span class="v">4 s</span><span class="k">to fit the read-out (one matrix solve)</span></div>
+    <div class="num-tile"><span class="v">1.7 M</span><span class="k">spikes in the Brian2 run · ~2.4 Hz/neuron</span></div>
+    <div class="num-tile"><span class="v">0.57</span><span class="k">correlation of population rate with the chugs</span></div>
+    <div class="num-tile"><span class="v">70</span><span class="k">articulated body parts on the fly</span></div>
+    <div class="num-tile"><span class="v">60 fps</span><span class="k">stage with 920 k brain segments</span></div>
+    <div class="num-tile"><span class="v">0.28 s</span><span class="k">where bar 1 sits in your backing track</span></div>
+  </div>
+</section>
+
+<!-- ============================================================ TOOLS -->
+<section>
+  <div class="sect-head">
+    <div class="eyebrow">07 · Tools &amp; frameworks — the complete inventory</div>
+    <h2>Everything it runs on</h2>
+    <p class="prose">Python 3.10 on Windows for the science and audio; a plain HTML page with three.js for the stage. No cloud, no training GPUs — the heaviest step (the whole-song spiking run) takes 85 seconds on a desktop. Versions are the ones actually installed in <code>.venv</code>.</p>
+  </div>
+
+  <div class="inv">
+    <h3>Data &amp; source material <span class="sub">— what the project is <i>made of</i></span></h3>
+    <div class="scroller"><table class="inv-t">
+      <thead><tr><th>Tool / source</th><th>What it is</th><th>What it did here</th><th>Where</th></tr></thead>
+      <tbody>
+        <tr><td><span class="badge data">MaleCNS v1.0</span></td><td>Janelia FlyEM's EM reconstruction of a male fruit fly's brain + nerve cord (~166 k neurons), CC-BY</td><td>The wiring (every synapse count), cell types, predicted neurotransmitters, soma positions, skeletons, 76 brain-region meshes</td><td><code>connectome.py</code>, <code>skeletons.py</code></td></tr>
+        <tr><td><span class="badge data">neuPrint</span></td><td>Janelia's connectome server: a neo4j graph database queried in the <b>Cypher</b> language, with a personal token</td><td>One Cypher query for the top-2,000 neurons + all PAM/PPL1, one for the edges between them</td><td><code>connectome.py</code>, <code>.env</code></td></tr>
+        <tr><td><span class="badge data">NeuroMechFly / flygym</span></td><td>EPFL's micro-CT fly body: MuJoCo <b>MJCF</b> model with 70 parts and hinge joints, plus meshes and a standing pose (Apache-2.0)</td><td>The fly on stage — its joint tree became the rig the IK moves</td><td><code>third_party/neuromechfly</code>, <code>stage_export.py</code>, <code>fly.js</code></td></tr>
+        <tr><td><span class="badge data">8ridge lite</span></td><td>James Stubbs' open-source 8-string guitar sampler VST (JUCE / C++, GPL-3): 61 WAV samples + a <code>SamplerVoice</code> engine</td><td>The sound of the guitar; its engine was ported to Python line-for-line and its samples are what you hear</td><td><code>third_party/8ridgelite</code>, <code>bridgelite.py</code></td></tr>
+        <tr><td><span class="badge data">Ibanez M8M model</span></td><td>Your OBJ mesh + PBR textures of the guitar</td><td>Measured (bridge, nut, 24 fret wires by ray-cast) and converted to glTF</td><td><code>third_party/ibanez-m8m</code>, <code>stage_export.py</code>, <code>guitar.js</code></td></tr>
+        <tr><td><span class="badge data">Your tab · .gp · backing</span></td><td>Tab-only PDF (Guitar Pro export), GP7 <code>.gp</code> file, backing-track mp3</td><td>The teacher (PDF is the default source), and the record the fly plays along to</td><td><code>data/</code>, <code>pdftab.py</code>, <code>gpif.py</code>, <code>record.py</code></td></tr>
+      </tbody>
+    </table></div>
+  </div>
+
+  <div class="inv">
+    <h3>Language, runtime &amp; workflow</h3>
+    <div class="scroller"><table class="inv-t">
+      <thead><tr><th>Tool</th><th>What it is</th><th>What it did here</th><th>Where</th></tr></thead>
+      <tbody>
+        <tr><td><span class="badge py">Python 3.10.11</span></td><td>In a <code>venv</code> (<code>.venv</code>), packages via pip, pinned in <code>requirements.txt</code></td><td>All science, audio and export code — 21 modules, one <code>argparse</code> CLI (<code>python -m flybrain_composer.cli …</code>)</td><td><code>flybrain_composer/</code></td></tr>
+        <tr><td><span class="badge py">python-dotenv</span></td><td>Loads <code>.env</code> into the environment</td><td>Keeps the neuPrint token out of the code and out of git</td><td><code>config.py</code></td></tr>
+        <tr><td><span class="badge py">PowerShell</span></td><td>Windows shell</td><td><code>Start-Process</code> launchers for the long jobs (skeleton fetch, spiking run, Stage B) so they outlive a terminal</td><td><code>output/run_*.ps1</code></td></tr>
+        <tr><td><span class="badge py">Jupyter · matplotlib · plotly</span></td><td>Notebooks and plotting</td><td>Exploring the dataset and sanity-checking the reservoir (rank, spectral radius, memory)</td><td><code>notebooks/01_…</code>, <code>02_…</code></td></tr>
+        <tr><td><span class="badge py">tqdm</span></td><td>Progress bars</td><td>Long loops: reservoir run, LIF simulation, sample rendering</td><td>several</td></tr>
+        <tr><td><span class="badge js">http.server (stdlib)</span></td><td>Python's built-in static server, subclassed to send no-cache headers</td><td>Serves the stage page; the no-cache headers stop the browser holding stale ES modules</td><td><code>stage_server.py</code></td></tr>
+        <tr><td><span class="badge py">Claude Code</span></td><td>AI coding agent (Anthropic) in the desktop app</td><td>Wrote and ran the code with you — pulls, fits, renders, IK iterations, this page</td><td>—</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+
+  <div class="inv">
+    <h3>Connectome access, neuron anatomy &amp; the brain view</h3>
+    <div class="scroller"><table class="inv-t">
+      <thead><tr><th>Tool</th><th>What it is</th><th>What it did here</th><th>Where</th></tr></thead>
+      <tbody>
+        <tr><td><span class="badge py">neuprint-python 0.6</span></td><td>Official Python client for neuPrint</td><td><code>Client.fetch_custom()</code> runs the Cypher queries and returns DataFrames</td><td><code>connectome.py</code></td></tr>
+        <tr><td><span class="badge py">NAVis 1.12</span></td><td>Neuron analysis &amp; visualisation toolkit (Schlegel lab)</td><td>Fetch the 2,318 skeletons + ROI meshes (<code>navis.interfaces.neuprint</code>), heal breaks, Strahler-prune, downsample to ~350 nodes each</td><td><code>skeletons.py</code></td></tr>
+        <tr><td><span class="badge py">octarine3d 0.8 + navis plugin</span></td><td>NAVis's GPU viewer</td><td>The live brain window: one merged line object per brain, recoloured per frame from spike times</td><td><code>neuroviz.py</code></td></tr>
+        <tr><td><span class="badge py">pygfx 0.17 · wgpu 0.31 · glfw 2.10</span></td><td>Render stack under octarine: scene graph → WebGPU-style API → Vulkan on the RTX 2060, window via GLFW</td><td>Vertex colormaps, point sprites for somas, translucent ROI meshes, off-screen screenshots</td><td><code>neuroviz.py</code></td></tr>
+        <tr><td><span class="badge py">Brian2 2.8.0.4</span></td><td>Spiking neural-network simulator (equations as text, NumPy code generation — no C compiler needed)</td><td>2,318 leaky integrate-and-fire neurons with exponential synapses over the whole song → 1.7 M spikes; also a numpy twin for <code>--live</code></td><td><code>snn.py</code></td></tr>
+        <tr><td><span class="badge py">pandas 2.3 · pyarrow 25</span></td><td>DataFrames and the Parquet file format</td><td>Every cache: neurons, edges, skeletons, render cache, spike raster</td><td><code>data/cache/</code></td></tr>
+        <tr><td><span class="badge py">Pillow</span></td><td>Image library</td><td>Guitar texture resizing (2K PBR maps) and mesh-map debug images</td><td><code>stage_export.py</code></td></tr>
+      </tbody>
+    </table></div>
+  </div>
+
+  <div class="inv">
+    <h3>Reservoir, learning &amp; maths</h3>
+    <div class="scroller"><table class="inv-t">
+      <thead><tr><th>Tool</th><th>What it is</th><th>What it did here</th><th>Where</th></tr></thead>
+      <tbody>
+        <tr><td><span class="badge py">NumPy 2.2</span></td><td>Arrays</td><td>The reservoir update, the Fourier phase codes, the piano-roll targets, note decoding, fitness heuristics, all DSP</td><td>everywhere</td></tr>
+        <tr><td><span class="badge py">SciPy 1.15 — sparse</span></td><td>Sparse matrices + <code>eigs</code></td><td>The 2,318 × 2,318 signed weight matrix (236,870 non-zeros) and its spectral radius</td><td><code>connectome.py</code>, <code>reservoir.py</code></td></tr>
+        <tr><td><span class="badge py">SciPy — linalg</span></td><td>Cholesky solve</td><td>Stage A ridge regression <code>(XᵀX + λI)⁻¹XᵀY</code> in one solve (~4 s)</td><td><code>train_supervised.py</code></td></tr>
+        <tr><td><span class="badge py">SciPy — signal</span></td><td>Filters, FFT convolution</td><td>Amp/cab biquads, onset envelope + cross-correlation for backing-track alignment</td><td><code>bridgelite.py</code>, <code>record.py</code></td></tr>
+        <tr><td><span class="badge py">SciPy — spatial.transform</span></td><td>Rotations</td><td>Frame changes when converting the guitar and fly meshes</td><td><code>stage_export.py</code></td></tr>
+        <tr><td><span class="badge py">cma 4.4</span></td><td>CMA-ES evolution strategy (Hansen)</td><td>Stage B offline (12 knobs incl. a rank-8 read-out tweak) and live (nine musical knobs, one strategy across the show, nudged by 👍/👎)</td><td><code>train_reward.py</code>, <code>live.py</code>, <code>fitness.py</code></td></tr>
+        <tr><td><span class="badge py">corpus.py</span></td><td>Multi-song learning</td><td>Loads a folder of tabs, picks the rhythm track, transposes to the fly's tuning, excerpts each song's riffs, fits one reader (shared section codes, 4,000 random tanh features, Gram matrices accumulated per song), builds the synthetic frame and the riff-locked drums for the generator</td><td><code>corpus.py</code>, <code>data/songs/</code></td></tr>
+        <tr><td><span class="badge py">scikit-learn</span></td><td>ML toolkit</td><td>Installed for comparison runs only — the shipped ridge is the hand-written SciPy solve</td><td>—</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+
+  <div class="inv">
+    <h3>Music notation, MIDI &amp; audio</h3>
+    <div class="scroller"><table class="inv-t">
+      <thead><tr><th>Tool</th><th>What it is</th><th>What it did here</th><th>Where</th></tr></thead>
+      <tbody>
+        <tr><td><span class="badge py">PyMuPDF 1.28</span></td><td>PDF library (MuPDF bindings)</td><td>Reads the tab PDF's text spans and vector drawings — staff lines, stems, beams, dots, rest glyphs — for the home-made OMR</td><td><code>pdftab.py</code></td></tr>
+        <tr><td><span class="badge py">PyGuitarPro 0.11</span></td><td>Reader for Guitar Pro 3–5 files</td><td>Fallback transcription source (<code>.gp3/.gp4/.gp5</code>)</td><td><code>transcription.py</code></td></tr>
+        <tr><td><span class="badge py">xml.etree (stdlib)</span></td><td>XML parser</td><td>Custom parser for GP7 <code>.gp</code> files (a zip holding <code>score.gpif</code> XML): notes, repeats, annotations</td><td><code>gpif.py</code></td></tr>
+        <tr><td><span class="badge py">pretty_midi 0.2</span></td><td>MIDI file library</td><td>Writes the fly's performance as <code>.mid</code> (and reads it back for diffing against the tab)</td><td><code>sonify.py</code></td></tr>
+        <tr><td><span class="badge py">mido 1.3 · python-rtmidi 1.5</span></td><td>MIDI messages + real-time MIDI ports</td><td><code>play --midi-out</code>: note on/off to a port (via loopMIDI) so the real 8ridge lite VST can play in a DAW</td><td><code>player.py</code></td></tr>
+        <tr><td><span class="badge py">soundfile 0.14 (libsndfile 1.2)</span></td><td>Audio file I/O</td><td>Reads the 61 samples and your mp3, writes 48 kHz stems and mixes</td><td><code>bridgelite.py</code>, <code>record.py</code></td></tr>
+        <tr><td><span class="badge py">sounddevice 0.5 (PortAudio)</span></td><td>Audio streaming</td><td>Plays the stems and provides the DAC time that is the master clock at show time; live G/B/D stem toggles</td><td><code>player.py</code></td></tr>
+        <tr><td><span class="badge py">8ridge lite engine (port)</span></td><td>JUCE <code>Synthesiser</code>/<code>SamplerVoice</code> logic rewritten in NumPy</td><td>Pitch ratio, linear interpolation, 5/10 ms ADSR, velocity gain, retrigger release, the E1-layer quirk, then amp + 4×12 cab, palm-mute gating, double-tracking</td><td><code>bridgelite.py</code></td></tr>
+      </tbody>
+    </table></div>
+  </div>
+
+  <div class="inv">
+    <h3>3D export &amp; the browser stage</h3>
+    <div class="scroller"><table class="inv-t">
+      <thead><tr><th>Tool</th><th>What it is</th><th>What it did here</th><th>Where</th></tr></thead>
+      <tbody>
+        <tr><td><span class="badge py">trimesh 5.1</span></td><td>Mesh library</td><td>Loads the fly STLs and the M8M OBJ, ray-casts the fret wires, decimates ROI meshes, writes <code>.glb</code></td><td><code>stage_export.py</code></td></tr>
+        <tr><td><span class="badge py">websockets 16</span></td><td>asyncio WebSocket server</td><td>The conductor → stage link on port 8765: <code>{t, spikes, notes}</code> 30× per second</td><td><code>player.py</code></td></tr>
+        <tr><td><span class="badge js">three.js r170</span></td><td>WebGL 3D library, vendored as ES modules (no bundler)</td><td>Scene, cameras, lights, glTF loading, the fly rig, the guitar, the brain hologram</td><td><code>stage/vendor</code>, <code>app.js</code></td></tr>
+        <tr><td><span class="badge js">three addons</span></td><td><code>GLTFLoader</code>, <code>OrbitControls</code>, <code>EffectComposer</code> + <code>UnrealBloomPass</code>, <code>BufferGeometryUtils</code></td><td>Model loading, orbit camera, the bloom glow on spikes</td><td><code>stage/vendor/jsm</code></td></tr>
+        <tr><td><span class="badge js">GLSL (custom shaders)</span></td><td>Hand-written vertex/fragment shaders in <code>ShaderMaterial</code></td><td>Brain glow: a <code>DataTexture</code> of last-spike times per neuron drives colour and alpha, fading yellow → red → blue</td><td><code>brain.js</code></td></tr>
+        <tr><td><span class="badge js">Hand-written IK</span></td><td>Planar two-bone arm solver + CCD, joint limits, β-search for a reachable elbow</td><td>Fretting hand under the neck onto the right fret, picking hand over the strings, head-bang, wing flare</td><td><code>fly.js</code>, <code>app.js</code></td></tr>
+        <tr><td><span class="badge js">WebAudio API</span></td><td>Browser audio</td><td>Standalone mode plays the three stems with per-stem gain toggles in the page</td><td><code>app.js</code></td></tr>
+        <tr><td><span class="badge js">WebSocket API · localStorage</span></td><td>Browser APIs</td><td>Follow the Python conductor; remember your guitar placement between reloads</td><td><code>app.js</code></td></tr>
+        <tr><td><span class="badge js">glTF 2.0 (.glb)</span></td><td>3D interchange format</td><td>Fly (with joint hierarchy), guitar (with PBR textures), region meshes</td><td><code>stage/data/*.glb</code></td></tr>
+      </tbody>
+    </table></div>
+  </div>
+
+  <p class="note" style="margin-top:14px"><b>How to say it in one breath:</b> "Data from Janelia's MaleCNS connectome via neuPrint; NAVis for the neuron shapes; NumPy/SciPy for a reservoir with a ridge read-out; CMA-ES for the reward stage; Brian2 for the spiking brain shown in an octarine/pygfx window; PyMuPDF to read the tab; a Python port of the 8ridge lite sampler for the guitar sound; trimesh to export the NeuroMechFly body and the M8M to glTF; and three.js with hand-written IK and shaders for the stage, synced over a WebSocket to the audio clock."</p>
+</section>
+
+<!-- ============================================================ BUILD LOG -->
+<section>
+  <div class="sect-head">
+    <div class="eyebrow">08 · Build log — 14 September 2026</div>
+    <h2>From empty folder to a fly on stage, with receipts</h2>
+    <p class="prose">One day, one machine. Every milestone below points at the file it produced (with its size and timestamp) or the number it logged, so each claim in the video can be backed by something you can open. Times are the file-modified times on disk.</p>
+  </div>
+
+  <div class="scroller">
+  <table class="log">
+    <thead><tr><th>Time</th><th>Milestone</th><th>What happened</th><th>Proof</th></tr></thead>
+    <tbody>
+      <tr><td class="t">01:17</td><td><b>Environment</b></td><td>Python 3.10 venv; 40+ packages installed. brian2's newest release had no Windows wheel for 3.10 → pinned to 2.8.0.4.</td><td><code>output/pip_install*.log</code> (3 attempts) · <code>requirements.txt</code></td></tr>
+      <tr><td class="t">01:24</td><td><b>First pull — failed</b></td><td><code>neuprint-python</code> doesn't accept Cypher parameters (<code>TypeError: unexpected keyword 'superclasses'</code>). Fixed by inlining the literals into the query.</td><td><code>output/pull.log</code> — the traceback is still there</td></tr>
+      <tr><td class="t">01:26</td><td><b>Connectome pulled</b></td><td>Top-2,000 central-brain neurons + all PAM/PPL1 dopaminergic neurons, and every edge between them, from <code>male-cns:v1.0</code>.</td><td><code>neurons.parquet</code> 128 KB → <b>2,318 neurons</b> (332 DANs; ACh 977 · GABA 583 · DA 352 · Glu 292) · <code>edges.parquet</code> 644 KB → <b>236,870 edges, 3,610,233 synapses</b></td></tr>
+      <tr><td class="t">01:28 → 01:32</td><td><b>Skeletons</b></td><td>3D skeleton of every neuron fetched in 24 resumable chunks (detached PowerShell job), plus the brain-region meshes.</td><td><code>skeletons.parquet</code> 37.8 MB → <b>3,474,363 nodes / 2,318 neurons</b> · <code>rois/</code> 76 meshes · <code>skeletons.log</code> "EXIT=0"</td></tr>
+      <tr><td class="t">01:35</td><td><b>Reservoir</b></td><td>Signed, log-weighted sparse W; leaky-tanh update with heterogeneous time constants; spectral radius estimate.</td><td><code>reservoir.py</code>, <code>model.py</code> · notebook <code>02_reservoir_sanity.ipynb</code></td></tr>
+      <tr><td class="t">01:38</td><td><b>First render</b></td><td>octarine/pygfx window draws all skeletons — proof the GPU path (wgpu → Vulkan) works on this box.</td><td><code>render_check.png</code> ↓ image 1</td></tr>
+      <tr><td class="t">01:47 → 01:58</td><td><b>Render cache</b></td><td>EM skeletons are bushy; plain downsampling did nothing. Strahler-pruning then downsampling → 350 nodes/neuron.</td><td><code>skeletons_render.parquet</code> 11.3 MB → <b>922,697 nodes</b> · <code>render_cache.log</code> "2318 neurons … 153 s"</td></tr>
+      <tr><td class="t">01:48 → 01:52</td><td><b>GP7 parser</b></td><td>Your <code>.gp</code> file: zip → <code>score.gpif</code> XML → notes, repeats, "25/16 ×5 + 3/16" annotations.</td><td><code>data/rational_gaze.gp</code> · <code>gpif.py</code> (12 KB)</td></tr>
+      <tr><td class="t">02:02</td><td><b>Spiking model</b></td><td>Brian2 LIF network on the same wiring; NumPy twin for live mode.</td><td><code>snn.py</code></td></tr>
+      <tr><td class="t">02:19</td><td><b>Brain snapshot</b></td><td>First spike-coloured frame: neurons that fired recently glow, dopaminergic cells in magenta.</td><td><code>brain_20.0s.png</code> 3200×2000 ↓ image 2</td></tr>
+      <tr><td class="t">02:22</td><td><b>Stage B code</b></td><td>Fitness heuristics + CMA-ES loop with reward injected into PAM (+) / PPL1 (−).</td><td><code>fitness.py</code>, <code>train_reward.py</code></td></tr>
+      <tr><td class="t">02:25 → 02:33</td><td><b>Your material</b></td><td>Tab PDF #1, then the tab PDF you said to use instead, then the backing track.</td><td><code>data/rational_gaze.pdf</code> 105 KB · <code>rational_gaze_backing.mp3</code> 5.0 MB</td></tr>
+      <tr><td class="t">05:33</td><td><b>OMR + Stage A</b></td><td>Home-made PDF tab reader (stems, beams, ties, repeats, endings) → piano roll → ridge read-out on the reservoir. Section-phase inputs added to escape a rank-20 state space (F1 0.80 → 0.99).</td><td><code>model_stageA.json</code>: <b>1,272 / 1,272 notes, F1 0.9898, pitch 1.000, onset error 0.0 ms, fit 7.5 s</b> ↓ block</td></tr>
+      <tr><td class="t">05:34</td><td><b>8ridge lite port + alignment</b></td><td>JUCE sampler logic rebuilt in NumPy; amp/cab chain; backing track aligned by onset cross-correlation.</td><td><code>record_align.json</code>: <b>offset 0.2773 s, 133.0 BPM, score 0.341</b></td></tr>
+      <tr><td class="t">05:36</td><td><b>Whole-song spiking run</b></td><td>312.4 s of song simulated at 1 ms.</td><td><code>spikes.log</code>: "<b>1,717,030 spikes, mean rate 2.4 Hz/neuron, 85 s</b>" · <code>spikes.parquet</code> 6.0 MB</td></tr>
+      <tr><td class="t">05:47</td><td><b>Live conductor</b></td><td>Audio-clock player driving the octarine window; stem key toggles.</td><td><code>play_window.log</code>: "[play] done — 75,910 spikes shown, EXIT=0"</td></tr>
+      <tr><td class="t">05:48</td><td><b>Stage B run</b></td><td>25 generations × 8 candidates on bars 0–16.</td><td><code>shape.log</code>: "best fitness <b>0.726</b> vs Stage A replay <b>0.701</b>; dan_gain +0.03" · <code>stageB_history.json</code> ↓ chart</td></tr>
+      <tr><td class="t">05:49 → 05:50</td><td><b>Improvised take</b></td><td>Stage B model composes the full song; second brain snapshot.</td><td><code>flybrain_rational_gaze_improv.mid</code> → <b>1,878 notes, 310 s</b> · <code>brain_40.0s.png</code> ↓ image 3</td></tr>
+      <tr><td class="t">11:51</td><td><b>Your M8M mesh measured</b></td><td>OBJ analysed: string plane, bridge/nut x, 24 fret-wire positions by ray-casting.</td><td><code>m8m_mesh_map.png</code> ↓ image 4 · <code>guitar.json</code>: 24 frets, scale length, strap buttons</td></tr>
+      <tr><td class="t">11:58 → 11:59</td><td><b>Final fit · stems · stage export</b></td><td>Refit and compose (palm-mute gating only where the tab says P.M.); render stems; export everything the browser needs.</td><td><code>flybrain_rational_gaze.mid</code> <b>1,272 notes</b> · <code>stems/guitar.wav</code> 48 kHz stereo 312.4 s (90 MB) · <code>stage/data/</code>: <code>fly.glb</code> 24 MB (70 bodies), <code>brain.bin</code> 22 MB (1.84 M vertices), <code>notes.json</code> 1,272, <code>spikes_t.bin</code> 6.9 MB</td></tr>
+      <tr><td class="t">12:01</td><td><b>Listening previews</b></td><td>30-second mixes: fly + backing, and fly guitar alone.</td><td><code>preview_fly_plus_backing_30s.mp3</code> · <code>preview_fly_guitar_only_30s.mp3</code></td></tr>
+      <tr><td class="t">12:09</td><td><b>M8M on stage</b></td><td>Guitar mesh converted to glTF with 2K PBR textures; procedural guitar retired.</td><td><code>guitar.glb</code> 12.0 MB</td></tr>
+      <tr><td class="t">12:47</td><td><b>Playable fly</b></td><td>Final IK: fretting hand under the neck onto the fret, picking hand over the strings, no crossing, no leg pointing up, guitar at the abdomen; placement mode (P) for manual tweaks.</td><td><code>fly.js</code>, <code>app.js</code>, <code>index.html</code> · your confirmation "all looks great"</td></tr>
+      <tr><td class="t">18:20 → 19:30</td><td><b>Live Stage B</b></td><td>New <code>live.py</code>: planner process + 3 evaluation workers audition the next 8-bar phrase while the current one plays; phrase-by-phrase sampler rendering into the streaming stem (one calibrated level, tails across boundaries); treat into PAM/PPL1; stage HUD + Live-learning toggle; WebSocket commands back to the conductor; the live LIF hears the improvised notes.</td><td><code>output/live_improv.log</code>: phrases 2–6 improvised, <b>112–145 candidates each</b>, fitness 0.725 / 0.728 / 0.764 / <b>0.795</b> / 0.741 vs replay 0.746, render 0.4–0.6 s, 412,717 spikes in 75 s · <code>live_improv_toggle.log</code>: learning switched on over the WebSocket mid-phrase → next phrase improvised</td></tr>
+      <tr><td class="t">20:20</td><td><b>Control experiments</b></td><td>Refit Stage A with the reservoir swapped: inputs only, shuffled connectome, random same-size network, 10× smaller random network, unsigned wiring.</td><td><code>output/controls.json</code>: real <b>0.990</b> · inputs-only <b>0.000</b> · shuffled <b>0.995</b> · random same-size <b>0.996</b> · random 231 units <b>0.087</b> · unsigned <b>0.985</b></td></tr>
+      <tr><td class="t">15 Sep 00:30 → 05:10</td><td><b>Musical knobs · 👍/👎 · corpus · riff generator</b></td><td><code>live.py</code> rewritten around nine musical knobs (<code>meter.build_streams_ex</code> regenerates the inputs with displacement / stretch / blend); votes from the stage or brain window feed the treat, the scorer weights and the search; <code>corpus.py</code> loads a folder of tabs (auto rhythm-track pick, transposition to F1), fits one reader on 16-bar riff excerpts with shared section codes + 4,000 tanh features; <code>play --generate</code> / <code>cli generate</code> make riffs of the fly's own with riff-locked drums (hats = tempo, kick = riff, snare 2&amp;4 or thirds); stage gets 🎸 Own riffs, 👍/👎, taste HUD, drums over the WebSocket.</td><td><code>data/cache/corpus.json</code>: 11 songs, <b>mean onset F1 0.959</b> (linear reader on whole songs: 0.021; on riffs: 0.658) · <code>output/live_gen_test.log</code>: votes at 14.9 s re-weighted the scorer · <code>flybrain_djent_seed3/4.{mid,wav}</code>: 32 bars, 344 / 339 notes, F1-based vocabulary, 23/16 and 25/16 cycles</td></tr>
+      <tr><td class="t">17:15</td><td><b>Live check for this page</b></td><td>Stage opened in the browser, "fly guitar only" pressed.</td><td>HUD read: section <b>bars 1–8</b>, note <b>F♯2 · string 1 · fret 13 · vel 108</b>, time 0:05.5, <b>1,758 spikes/s</b>, browser audio</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="proofgrid">
+    <figure><img src="proof/render_check.jpg" alt="First octarine render of all 2,318 skeletons" loading="lazy"><figcaption><b>1 · 01:38 render check.</b> All 2,318 skeletons drawn once in the octarine/pygfx window — the GPU path works.</figcaption></figure>
+    <figure><img src="proof/brain_20s.jpg" alt="Brain at 20 seconds into the song, spiking neurons glowing" loading="lazy"><figcaption><b>2 · 02:19 brain at t = 20 s.</b> Recently spiked neurons glow yellow → red, resting ones blue; magenta = PAM/PPL1; translucent shells = brain regions.</figcaption></figure>
+    <figure><img src="proof/brain_40s.jpg" alt="Brain at 40 seconds into the song" loading="lazy"><figcaption><b>3 · 05:50 brain at t = 40 s.</b> After the whole-song Brian2 run — the population pulses with the chugs (rate–chug correlation 0.57).</figcaption></figure>
+    <figure><img src="proof/m8m_mesh_map.jpg" alt="Analysis plots of the M8M mesh: top view, string plane, side profile" loading="lazy"><figcaption><b>4 · 11:51 M8M mesh map.</b> Top view, the y &gt; 0.031 slice (strings, frets, pickup tops) and the side profile used to place the 24 fret wires and the string plane.</figcaption></figure>
+  </div>
+
+  <div class="twocol">
+    <figure class="fig">
+      <div class="eyebrow" style="margin-bottom:8px">Stage A — the read-out's score card (<code>model_stageA.json</code>)</div>
+      <pre class="proofpre">"stageA": {
+  "n_pred":              1272,
+  "n_truth":             1272,
+  "matched":             1259,
+  "precision":           0.9898,
+  "recall":              0.9898,
+  "f1":                  0.9898,
+  "pitch_accuracy":      1.0,
+  "mean_onset_error_ms": 0.0,
+  "seconds":             7.46
+}</pre>
+      <figcaption>1,272 notes predicted for 1,272 in the tab; 1,259 land on the exact 64th-note grid step with the exact pitch. The 13 misses are onsets a step early/late in dense 16th runs.</figcaption>
+    </figure>
+
+    <figure class="fig">
+      <div class="eyebrow" style="margin-bottom:8px">Stage B — fitness per generation (<code>stageB_history.json</code>)</div>
+      <svg viewBox="0 0 700 250" role="img" aria-label="Line chart of Stage B fitness over 25 CMA-ES generations: the best candidate per generation climbs from 0.41 to 0.73, the population mean from 0.32 to about 0.61, and the best-ever line passes the Stage A replay baseline of 0.701 at generation 22 and reaches 0.726 at generation 24.">
+        <g class="grid">
+          <line x1="60" y1="220" x2="650" y2="220"/><text x="52" y="224" text-anchor="end">0.3</text>
+          <line x1="60" y1="180" x2="650" y2="180"/><text x="52" y="184" text-anchor="end">0.4</text>
+          <line x1="60" y1="140" x2="650" y2="140"/><text x="52" y="144" text-anchor="end">0.5</text>
+          <line x1="60" y1="100" x2="650" y2="100"/><text x="52" y="104" text-anchor="end">0.6</text>
+          <line x1="60" y1="60" x2="650" y2="60"/><text x="52" y="64" text-anchor="end">0.7</text>
+        </g>
+        <line x1="60" y1="59.5" x2="650" y2="59.5" class="base"/>
+        <text x="648" y="52" text-anchor="end" class="lbl-base">Stage A replay · 0.701</text>
+        <polyline class="mean" points="60.0,211.3 84.6,213.4 109.2,211.8 133.8,200.9 158.3,173.3 182.9,173.7 207.5,142.1 232.1,121.4 256.7,133.8 281.2,145.6 305.8,135.5 330.4,125.7 355.0,119.1 379.6,124.3 404.2,111.5 428.8,109.9 453.3,99.6 477.9,108.3 502.5,100.6 527.1,92.6 551.7,113.8 576.2,92.2 600.8,94.9 625.4,94.6 650.0,117.7"/>
+        <polyline class="best" points="60.0,175.7 84.6,169.8 109.2,178.8 133.8,139.2 158.3,125.9 182.9,119.2 207.5,89.5 232.1,87.6 256.7,86.9 281.2,121.4 305.8,120.5 330.4,104.8 355.0,79.9 379.6,90.4 404.2,68.5 428.8,72.1 453.3,77.2 477.9,75.1 502.5,71.9 527.1,77.1 551.7,92.9 576.2,58.9 600.8,72.1 625.4,49.7 650.0,83.8"/>
+        <polyline class="ever" points="60.0,59.5 84.6,59.5 109.2,59.5 133.8,59.5 158.3,59.5 182.9,59.5 207.5,59.5 232.1,59.5 256.7,59.5 281.2,59.5 305.8,59.5 330.4,59.5 355.0,59.5 379.6,59.5 404.2,59.5 428.8,59.5 453.3,59.5 477.9,59.5 502.5,59.5 527.1,59.5 551.7,59.5 576.2,58.9 600.8,58.9 625.4,49.7 650.0,49.7"/>
+        <circle cx="625.4" cy="49.7" r="4" class="dot"/>
+        <text x="618" y="40" text-anchor="end" class="lbl-hi">0.726 · gen 24</text>
+        <text x="60" y="242" class="ax">gen 1</text>
+        <text x="650" y="242" text-anchor="end" class="ax">gen 25</text>
+        <g class="key">
+          <line x1="300" y1="238" x2="318" y2="238" class="best"/><text x="322" y="242">best of generation</text>
+          <line x1="430" y1="238" x2="448" y2="238" class="mean"/><text x="452" y="242">population mean</text>
+          <line x1="550" y1="238" x2="568" y2="238" class="ever"/><text x="572" y="242">best ever</text>
+        </g>
+      </svg>
+      <figcaption>25 generations × 8 candidates, 75 s. The search starts far below the replay (novelty costs fitness), climbs back, and passes the replay baseline twice — proof the "treats" loop moves the knobs, and proof that the gain is small.</figcaption>
+    </figure>
+  </div>
+
+  <div class="inv">
+    <h3>Setbacks that are part of the story <span class="sub">— each one is visible in the logs or the code</span></h3>
+    <div class="scroller"><table class="inv-t">
+      <thead><tr><th>Problem</th><th>Symptom</th><th>Fix</th><th>Proof</th></tr></thead>
+      <tbody>
+        <tr><td>Reservoir too "flat"</td><td>Neuron states had rank ≈ 20; Stage A stuck at F1 0.80</td><td>Fourier phase codes on all three input streams + section identity/phase; higher input gains and bias</td><td><code>meter.py</code> <code>_phase_code</code>; F1 now 0.9898 in <code>model_stageA.json</code></td></tr>
+        <tr><td>Dyads decoded as single notes</td><td>Oracle decode of the true piano roll only reached F1 0.916</td><td>Polyphonic decoder (chord ratio 0.6)</td><td><code>sonify.py</code> <code>decode_notes</code>; oracle now 1.000</td></tr>
+        <tr><td>Skeleton downsampling did nothing</td><td>EM skeletons are bushy — nodes barely dropped</td><td>Strahler-prune first, then downsample</td><td><code>render_cache.log</code>: 3.47 M → 922,697 nodes</td></tr>
+        <tr><td>Spiking net inert, then on fire</td><td>Scaled weights too weak; raw weights too dense to see anything</td><td>Raw log weights, unit-std input, inhibition ×4, τ<sub>glow</sub> 0.18 s</td><td><code>spikes.log</code>: 2.4 Hz/neuron (sparse, readable)</td></tr>
+        <tr><td>Palm-muting sounded choked</td><td>Every short note was gated</td><td>Gate only notes the tab marks P.M.</td><td><code>sonify.py</code> <code>articulate</code>, your note "sounded muted"</td></tr>
+        <tr><td>Hands crossed / guitar inside the fly / leg pointing up</td><td>Early IK poses</td><td>World-space poles, symmetric front-leg limits, planar arm solver with elbow search, guitar hung at the abdomen, placement mode</td><td><code>fly.js</code> <code>solveArmPlanar</code>; <code>app.js</code> <code>GUITAR_DEFAULT</code></td></tr>
+        <tr><td>Browser cached old modules</td><td>Fixes didn't appear in the stage</td><td>No-cache server + <code>?v=N</code> import versioning</td><td><code>stage_server.py</code>; <code>index.html</code> <code>app.js?v=25</code></td></tr>
+      </tbody>
+    </table></div>
+  </div>
+
+  <p class="note" style="margin-top:14px"><b>Reproduce any of it:</b> <code>python -m flybrain_composer.cli pull · skeletons · fit · compose · stems · spikes · shape · stage-export · play</code> — each step writes the file named above, so the proof regenerates.</p>
+</section>
+</div>
+</body></html>

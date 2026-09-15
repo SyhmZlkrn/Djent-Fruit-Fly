@@ -1,0 +1,15 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "stage",
+      "runtimeExecutable": ".venv/Scripts/python.exe",
+      "runtimeArgs": [
+        "-m",
+        "flybrain_composer.stage_server",
+        "8000"
+      ],
+      "port": 8000
+    }
+  ]
+}
