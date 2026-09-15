@@ -21,10 +21,14 @@ SR = 48000
 def generate_riffs(*, bars: int = 16, phrase_bars: int = 4, bpm: float | None = None, cycle16: int = 23,
                    snare: str = "24", density: float | None = 9.0, wildness: float = 0.5, generations: int = 6,
                    popsize: int = 8, seed: int = 0, out_dir: Path | None = None, model_path: Path | None = None,
-                   progress=None, tag: str | None = None) -> dict:
+                   progress=None, tag: str | None = None, drums: bool = False, weights: dict | None = None,
+                   theta0=None, sigma0: float | None = None, reward0: float = 0.0) -> dict:
     """Make up `bars` bars of riff. Returns {"midi", "wav", "json", "bpm", "phrases": [...]} with file paths.
 
-    `progress(k, n_phrases, message)` is called after every phrase (for a UI)."""
+    `progress(k, n_phrases, message)` is called after every phrase (for a UI). `weights` re-weights the
+    scorer (the listener's taste), `theta0`/`sigma0` warm-start the knob search from a previous run, and
+    `reward0` is a treat carried over (👍/👎 on the last riff) that is injected into the dopaminergic
+    neurons from the first phrase on — this is how a rating changes the next riff."""
     import cma
     import soundfile as sf
     from .bridgelite import render_drums
@@ -53,8 +57,12 @@ def generate_riffs(*, bars: int = 16, phrase_bars: int = 4, bpm: float | None = 
     runner = PhraseRunner(model, song, song_key="gen", form_mode="code", settings=wild, mode="generate",
                           stats=stats, codes=learned_codes(model))
     fmap = {int(p): tuple(v) for p, v in stats.get("fingering", {}).items()}
-    es = cma.CMAEvolutionStrategy(np.zeros(runner.dim), wild["sigma0"], {"popsize": int(popsize), "seed": int(seed) + 1, "verbose": -9})
-    x, reward, running = runner.x0, 0.0, None
+    start = np.zeros(runner.dim) if theta0 is None else np.asarray(theta0, dtype=float)[: runner.dim]
+    if len(start) < runner.dim:
+        start = np.r_[start, np.zeros(runner.dim - len(start))]
+    es = cma.CMAEvolutionStrategy(start, float(sigma0 or wild["sigma0"]), {"popsize": int(popsize), "seed": int(seed) + 1, "verbose": -9})
+    x, reward, running = runner.x0, float(np.clip(reward0, -1, 1)), None
+    thetas, comps = [], []
     L16 = phrase_bars * 16
     all_notes, all_drums, log = [], [], []
     prev_rel = None
@@ -65,14 +73,16 @@ def generate_riffs(*, bars: int = 16, phrase_bars: int = 4, bpm: float | None = 
             ths = es.ask()
             fits = []
             for th in ths:
-                sc, notes, xe = runner.run_phrase(np.asarray(th), reward, s0, s1, x, prev_notes=prev_rel)
+                sc, notes, xe = runner.run_phrase(np.asarray(th), reward, s0, s1, x, weights=weights, prev_notes=prev_rel)
                 fits.append(sc["fitness"])
                 if best is None or sc["fitness"] > best[0]:
-                    best = (sc["fitness"], sc, notes, xe)
+                    best = (sc["fitness"], sc, notes, xe, np.asarray(th, dtype=float))
             es.tell(ths, [-f for f in fits])
-        f, sc, notes, x = best
+        f, sc, notes, x, th_best = best
+        thetas.append([float(v) for v in th_best])
+        comps.append({c: float(v) for c, v in sc.items() if c not in ("fitness", "raw", "source")})
         running = f if running is None else running
-        reward = float(np.clip(f - running, -1, 1))
+        reward = float(np.clip(f - running + (reward0 if k == 0 else 0.0), -1, 1))
         running += 0.1 * (f - running)
         notes = finger(notes, [], fmap)
         all_notes += notes
@@ -95,7 +105,7 @@ def generate_riffs(*, bars: int = 16, phrase_bars: int = 4, bpm: float | None = 
             print(f"[generate] {msg}  pitches {pitches}", flush=True)
     tag = tag or f"seed{seed}"
     out_midi = out_dir / f"flybrain_djent_{tag}.mid"
-    notes_to_midi(all_notes, out_midi, bpm=bpm, drums=all_drums)
+    notes_to_midi(all_notes, out_midi, bpm=bpm, drums=all_drums if drums else None)
     rend = PhraseRenderer(bpm, total_s=song.seconds + 3.0, sr=SR)
     mix = np.zeros((int((song.seconds + 3.0) * SR) + SR, 2), np.float32)
     for k in range(phrases):
@@ -103,8 +113,9 @@ def generate_riffs(*, bars: int = 16, phrase_bars: int = 4, bpm: float | None = 
         off, chunk = rend.render([n for n in all_notes if s0 <= n.start < s1], s0, s1)
         e = min(len(mix), off + len(chunk))
         mix[off:e] += chunk[: e - off]
-    d = render_drums(all_drums, SR, bpm) * 0.4
-    mix[: min(len(mix), len(d))] += d[: len(mix)]
+    if drums:
+        d = render_drums(all_drums, SR, bpm) * 0.4
+        mix[: min(len(mix), len(d))] += d[: len(mix)]
     peak = float(np.abs(mix).max()) or 1.0
     if peak > 0.9:
         mix *= 0.9 / peak
@@ -114,5 +125,10 @@ def generate_riffs(*, bars: int = 16, phrase_bars: int = 4, bpm: float | None = 
     out_json = out_dir / f"flybrain_djent_{tag}.json"
     out_json.write_text(json.dumps({"bpm": bpm, "cycle16": int(cycle16), "snare": snare, "density": density,
                                     "wildness": wildness, "seed": seed, "phrases": log}, indent=1))
+    try:
+        es_mean, es_sigma = [float(v) for v in es.mean], float(es.sigma)
+    except Exception:  # noqa: BLE001
+        es_mean, es_sigma = thetas[-1] if thetas else [0.0] * runner.dim, float(wild["sigma0"])
     return {"midi": out_midi, "wav": out_wav, "json": out_json, "bpm": bpm, "phrases": log,
-            "n_notes": len(all_notes), "bars": phrases * phrase_bars}
+            "n_notes": len(all_notes), "bars": phrases * phrase_bars, "drums": drums,
+            "thetas": thetas, "comps": comps, "es_mean": es_mean, "es_sigma": es_sigma, "sigma0": float(wild["sigma0"])}

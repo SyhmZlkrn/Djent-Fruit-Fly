@@ -675,7 +675,12 @@ window.addEventListener('keydown', e => {
 $('startConductor').onclick = () => { $('overlay').style.display = 'none'; connectConductor('play'); };
 $('startLive').onclick = () => { $('overlay').style.display = 'none'; toggleLive(); };
 $('startGen').onclick = () => { $('overlay').style.display = 'none'; startGenerator(); };
-refreshLauncher();
+if (window.STATIC_STAGE) {
+  // a hosted, Python-free copy of the stage (Hugging Face / GitHub Pages): only browser playback works
+  for (const id of ['btnWs', 'btnStop', 'tglLive', 'btnGen', 'startConductor', 'startLive', 'startGen', 'startFlyOnly']) { const el = $(id); if (el) el.hidden = true; }
+  $('startStandalone').textContent = '▶ Play — the fly plays a riff its brain made up';
+  $('clock').textContent = '(browser)';
+} else refreshLauncher();
 window.addEventListener('resize', () => { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); composer.setSize(window.innerWidth, window.innerHeight); });
 window.addEventListener('keydown', e => { if (placementKey(e)) return; if (e.code === 'Space') { e.preventDefault(); togglePause(); } if (e.key >= '1' && e.key <= '5') setCamera(['audience', 'side', 'fretboard', 'brain', 'orbit'][e.key - 1]); });
 

@@ -144,7 +144,7 @@ def cmd_play(a):
         song = synthetic_song(bpm, a.phrases, a.phrase_bars, a.cycle)
         n = int((song.seconds + 3.0) * sr) + sr
         audio = {"guitar": np.zeros((n, 2), dtype=np.float32), "drums": np.zeros((n, 2), dtype=np.float32)}
-        gains = {"guitar": 0.0 if (a.midi_out and not a.keep_guitar) else 1.0, "drums": 1.0}
+        gains = {"guitar": 0.0 if (a.midi_out and not a.keep_guitar) else 1.0, "drums": 1.0 if a.drums else 0.0}
         cfg = PlannerConfig(mode="generate", phrase_bars=a.phrase_bars, popsize=a.popsize, sigma0=a.sigma, seed=a.seed,
                             start_s=a.start, margin_s=a.margin, enabled=True, wildness=a.wildness, sr=sr,
                             workers=a.workers, bpm=bpm, phrases=a.phrases, cycle16=a.cycle, snare=a.snare, density=a.density)
@@ -204,7 +204,7 @@ def cmd_generate(a):
     """Offline: the fly makes up riffs (same planner logic, fixed candidate budget) -> MIDI + WAV."""
     from .generate import generate_riffs
     out = generate_riffs(bars=a.bars, phrase_bars=a.phrase_bars, bpm=a.bpm, cycle16=a.cycle, snare=a.snare,
-                         density=a.density, wildness=a.wildness, generations=a.generations, seed=a.seed)
+                         density=a.density, wildness=a.wildness, generations=a.generations, seed=a.seed, drums=a.drums)
     print(f"[generate] {out['n_notes']} notes, {out['bars']} bars at {out['bpm']:.0f} BPM -> {out['midi']}  {out['wav']}", flush=True)
 
 
@@ -253,7 +253,7 @@ def main(argv=None):
     p = sub.add_parser("controls", help="does the fly's specific wiring matter? refit Stage A on shuffled / random reservoirs"); p.set_defaults(fn=cmd_controls)
     p = sub.add_parser("corpus", help="list the tabs in data/songs/ (and how each is transposed to the fly's tuning)"); p.set_defaults(fn=cmd_corpus)
     p = sub.add_parser("fit-multi", help="one shared read-out for every tab in data/songs/ -> data/cache/model_multi.npz"); p.add_argument("--lam", type=float, default=2e-4); p.add_argument("--bars-per-song", type=int, default=16, help="fit each song's most characteristic riffs (this many bars); 0 = whole songs"); p.add_argument("--expand", type=int, default=6000, help="random tanh features of the neuron states added to the read-out (0 = linear read-out, ~one song of capacity)"); p.set_defaults(fn=cmd_fit_multi)
-    p = sub.add_parser("generate", help="offline: the fly makes up djent riffs from the multi-song read-out -> output/flybrain_djent_*.mid/.wav"); p.add_argument("--bars", type=int, default=32); p.add_argument("--phrase-bars", type=int, default=4); p.add_argument("--bpm", type=float, default=None); p.add_argument("--cycle", type=int, default=25); p.add_argument("--wildness", type=float, default=0.5); p.add_argument("--generations", type=int, default=10); p.add_argument("--seed", type=int, default=0); p.add_argument("--snare", choices=["24", "thirds"], default="24"); p.add_argument("--density", type=float, default=None, help="notes per bar to aim for (default: corpus median)"); p.set_defaults(fn=cmd_generate)
+    p = sub.add_parser("generate", help="offline: the fly makes up djent riffs from the multi-song read-out -> output/flybrain_djent_*.mid/.wav"); p.add_argument("--bars", type=int, default=32); p.add_argument("--phrase-bars", type=int, default=4); p.add_argument("--bpm", type=float, default=None); p.add_argument("--cycle", type=int, default=25); p.add_argument("--wildness", type=float, default=0.5); p.add_argument("--generations", type=int, default=10); p.add_argument("--seed", type=int, default=0); p.add_argument("--snare", choices=["24", "thirds"], default="24"); p.add_argument("--density", type=float, default=None, help="notes per bar to aim for (default: corpus median)"); p.add_argument("--drums", action="store_true", help="add the synthesized riff-locked drum kit (default: guitar only)"); p.set_defaults(fn=cmd_generate)
 
     a = ap.parse_args(argv)
     a.fn(a)
