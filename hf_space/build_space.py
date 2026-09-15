@@ -104,10 +104,35 @@ def main():
     shutil.copy(src / "LICENSE", dst / "LICENSE")
     (dst / "README.md").write_text("Samples from https://github.com/JamesStubbsEng/8ridgelite (GPL-3.0), trimmed to "
                                    f"{SAMPLE_SECONDS:.0f} s and converted to 16-bit for this demo.\n")
+    # the stage: page + scripts + vendored three.js + the shared geometry (fly, brain, regions, guitar)
+    stage = out / "stage"
+    (stage / "data").mkdir(parents=True)
+    for name in ("app.js", "fly.js", "guitar.js", "brain.js"):
+        shutil.copy(ROOT / "stage" / name, stage / name)
+    shutil.copytree(ROOT / "stage" / "vendor", stage / "vendor")
+    html = (ROOT / "stage" / "index.html").read_text(encoding="utf-8")
+    html = html.replace('<script type="importmap">', '<script>window.STATIC_STAGE = true;</script>\n<script type="importmap">', 1)
+    html = html.replace("<h1><span>FlyBrain Composer</span> — a fly plays Rational Gaze</h1>",
+                        "<h1><span>FlyBrain Composer</span> — a fly plays the riff you just made</h1>", 1)
+    html = html.replace("<h2>FlyBrain Composer — the stage</h2>", "<h2>Your riff, played by the fly</h2>", 1)
+    html = html.replace("plays Meshuggah's <i>Rational Gaze</i> on an 8-string Ibanez M8M.",
+                        "plays the riff its brain just made up on an 8-string Ibanez M8M.", 1)
+    html = html.replace("The notes were composed by a reservoir built from the MaleCNS connectome; the brain above the stage is the\n       same 2,318 neurons spiking in a Brian2 simulation, replayed in sync with the music.",
+                        "The brain above the stage is the same 2,318 neurons spiking in a leaky integrate-and-fire simulation of the real wiring, hearing this riff.", 1)
+    (stage / "index.html").write_text(html, encoding="utf-8")
+    for name in ("fly.glb", "fly_rig.json", "guitar.glb", "guitar.json", "brain.bin", "brain_owner.bin", "somas.bin", "brain.json", "rois.glb"):
+        src_f = ROOT / "stage" / "data" / name
+        if src_f.exists():
+            shutil.copy(src_f, stage / "data" / name)
+        else:
+            print(f"[space] missing stage asset {name} — run: python -m flybrain_composer.cli stage-export")
+    (out / "runs").mkdir()
+    (out / "runs" / ".gitkeep").write_text("")
     import gradio
     (out / "README.md").write_text(README.format(gradio_version=gradio.__version__), encoding="utf-8")
     (out / ".gitattributes").write_text("*.npz filter=lfs diff=lfs merge=lfs -text\n*.parquet filter=lfs diff=lfs merge=lfs -text\n"
-                                        "*.wav filter=lfs diff=lfs merge=lfs -text\n")
+                                        "*.wav filter=lfs diff=lfs merge=lfs -text\n*.glb filter=lfs diff=lfs merge=lfs -text\n"
+                                        "*.bin filter=lfs diff=lfs merge=lfs -text\n")
     total = sum(f.stat().st_size for f in out.rglob("*") if f.is_file()) / 1e6
     print(f"space assembled at {out}: {n} samples trimmed, {total:.0f} MB total")
 

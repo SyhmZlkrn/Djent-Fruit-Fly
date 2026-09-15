@@ -261,15 +261,13 @@ not the composer. Say it that way.
 
 ## Try it without installing anything
 
-* **Riff generator (Hugging Face Space, ZeroGPU):** https://huggingface.co/spaces/SyhmZlkrn/djent-fruit-fly — the
-  offline generator (`cli generate`) behind a Gradio UI: bars, riff cycle, snare, notes/bar, wildness, seed → WAV + MIDI
-  and a table of which learned riffs each phrase came from; **👍 / 👎 the riff and the next one changes** (the vote is
-  a treat into the dopaminergic neurons, a re-weighting of the scorer and a nudge of the knob search — per visitor).
-  Each run uses about a minute of the visitor's free daily ZeroGPU quota (log in to Hugging Face for more).
-* **The stage, hosted (Hugging Face static Space):** https://huggingface.co/spaces/SyhmZlkrn/djent-fruit-fly-stage — the
-  NeuroMechFly plays a 48-bar riff its brain made up, with the spiking brain, in the browser (built by
-  `hf_space/build_stage.py`; no Python at show time). The live show — real-time improvisation, votes, the real song —
-  needs a desktop.
+* **Hugging Face Space (ZeroGPU, free):** https://huggingface.co/spaces/SyhmZlkrn/djent-fruit-fly — everything in one
+  page: pick bars, riff cycle, notes/bar, wildness, seed (drums optional) → the fly's brain makes up a riff (WAV + MIDI
+  + a table of which learned riffs each phrase came from) → **👍 / 👎 it** (the vote becomes a treat into the dopaminergic
+  neurons, re-weights the scorer and nudges the knob search for your *next* riff) → and **the NeuroMechFly plays your
+  riff** on the M8M right below, with the same 2,318 neurons spiking above it (a LIF simulation hearing that riff,
+  computed per run). Each run costs about a minute of the visitor's free daily ZeroGPU quota (log in for more). The live
+  show — improvising on a real song in real time, votes while it plays — still needs a desktop.
 * **How it works:** open [`docs/how_it_works.html`](docs/how_it_works.html) — pipeline diagrams, every step in plain
   words, the tools, and a timestamped build log with proof of every number.
 * **Listen:** [`docs/audio/`](docs/audio/) — riffs the fly made up from the 19-tab corpus.

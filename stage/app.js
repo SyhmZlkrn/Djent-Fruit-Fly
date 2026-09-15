@@ -71,10 +71,15 @@ const tmpV = new THREE.Vector3(), tmpV2 = new THREE.Vector3(), kneeTmp = new THR
 const WING_AXIS_L = new THREE.Vector3(1, 0, 0), WING_AXIS_R = new THREE.Vector3(-1, 0, 0);   // flap about the body axis
 
 // ------------------------------------------------------------------ loading
+// A hosted copy can point the *performance* files (song, notes, drums, sections, stems, spikes) at another
+// folder with ?run=<url> — the fly, brain and guitar always come from ./data/. This is how the generator Space
+// shows the riff you just made: each run writes its own folder.
+const RUN = (() => { const r = new URLSearchParams(location.search).get('run'); return r ? (r.endsWith('/') ? r : r + '/') : './data/'; })();
+
 async function loadAll() {
   const set = m => { $('loading').textContent = m; };
   set('loading song…');
-  const [song, notes, drums, sections] = await Promise.all(['song', 'notes', 'drums', 'sections'].map(n => fetch(`./data/${n}.json`).then(r => r.json())));
+  const [song, notes, drums, sections] = await Promise.all(['song', 'notes', 'drums', 'sections'].map(n => fetch(`${RUN}${n}.json`).then(r => r.json())));
   Object.assign(S, { song, notes, drums, sections });
   set('loading the fly (NeuroMechFly, 24 MB)…');
   const loader = new GLTFLoader();
@@ -86,7 +91,7 @@ async function loadAll() {
   set('loading region meshes…');
   try { const rois = await loader.loadAsync('./data/rois.glb'); buildRois(rois.scene); } catch (e) { console.warn('rois', e); }
   set('loading spike raster…');
-  try { S.raster = await loadSpikes(); } catch (e) { console.warn('spikes', e); }
+  try { S.raster = await loadSpikes(RUN); } catch (e) { console.warn('spikes', e); }
   set('loading the Ibanez M8M…');
   const guitar = await loadGuitar(loader);
   buildGuitar(guitar);
@@ -352,10 +357,10 @@ async function loadAudioStems() {
 async function _loadAudioStems() {
   AUDIO.ctx = new (window.AudioContext || window.webkitAudioContext)();
   let meta = { stems: [], mix: true };
-  try { meta = await fetch('./data/stems.json').then(r => r.json()); } catch (e) { }
+  try { meta = await fetch(`${RUN}stems.json`).then(r => r.json()); } catch (e) { }
   const names = meta.stems && meta.stems.length ? meta.stems : ['mix'];
   for (const name of names) {
-    const url = name === 'mix' ? './data/song.mp3' : `./data/stem_${name}.mp3`;
+    const url = name === 'mix' ? `${RUN}song.mp3` : `${RUN}stem_${name}.mp3`;
     try {
       const buf = await fetch(url).then(r => r.arrayBuffer());
       AUDIO.buffers[name] = await AUDIO.ctx.decodeAudioData(buf);
@@ -677,7 +682,8 @@ $('startLive').onclick = () => { $('overlay').style.display = 'none'; toggleLive
 $('startGen').onclick = () => { $('overlay').style.display = 'none'; startGenerator(); };
 if (window.STATIC_STAGE) {
   // a hosted, Python-free copy of the stage (Hugging Face / GitHub Pages): only browser playback works
-  for (const id of ['btnWs', 'btnStop', 'tglLive', 'btnGen', 'startConductor', 'startLive', 'startGen', 'startFlyOnly']) { const el = $(id); if (el) el.hidden = true; }
+  for (const id of ['btnWs', 'btnStop', 'tglLive', 'btnGen', 'startConductor', 'startLive', 'startGen', 'startFlyOnly', 'overlayHint', 'stemBacking']) { const el = $(id); if (el) el.hidden = true; }
+  fetch(`${RUN}stems.json`).then(r => r.json()).then(m => { if (!(m.stems || []).includes('drums')) $('stemDrums').hidden = true; }).catch(() => { });
   $('startStandalone').textContent = '▶ Play — the fly plays a riff its brain made up';
   $('clock').textContent = '(browser)';
 } else refreshLauncher();
