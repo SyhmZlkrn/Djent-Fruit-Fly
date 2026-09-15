@@ -27,9 +27,9 @@ original design document.
 | | |
 |---|---|
 | ![The fly on stage: NeuroMechFly body, Ibanez M8M, the brain hologram spiking above](docs/screenshots/stage_audience.jpg) | ![Fretboard camera: the left leg frets the tab's actual string and fret, the right leg picks](docs/screenshots/stage_fretboard.jpg) |
-| *Audience view — the NeuroMechFly body (EPFL micro-CT scan, 70 articulated parts) plays the Ibanez M8M while the same 2,318 neurons spike as a hologram above it.* | *Fretboard camera — the fretting leg comes from under the neck onto the tab's real string and fret (open low F here); the picking leg hangs over the strings at the bridge.* |
+| *Audience view* | *Fretboard camera* |
 | ![Side view of the fly playing](docs/screenshots/stage_side.jpg) | ![Brain camera: the 2,318 MaleCNS neurons spiking, dopaminergic PAM/PPL1 in magenta](docs/screenshots/stage_brain.jpg) |
-| *Side view — two-bone IK elbows, planar arm solver, wings flare on accents, head-bangs on kick and snare.* | *Brain camera — the connectome's real neuron skeletons; yellow = spiking now, red = just spiked, blue = resting, magenta = PAM/PPL1 (where the treat goes in).* |
+| *Side view* | *Brain camera* |
 
 ![The live brain window (octarine / pygfx): all 2,318 skeletons, spikes glowing, 76 region shells](docs/proof/brain_40s.jpg)
 
