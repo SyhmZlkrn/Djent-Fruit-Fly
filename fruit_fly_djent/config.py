@@ -38,7 +38,7 @@ def neuprint_token() -> str:
 # --- subgraph selection ---------------------------------------------------
 # Central-brain intrinsic neurons ranked by total synapse count, plus *every*
 # PAM/PPL1 dopaminergic neuron (the Stage B reward injection site).
-SUBGRAPH_N_TOP = int(os.environ.get("FLYBRAIN_N_TOP", 2000))
+SUBGRAPH_N_TOP = int(os.environ.get("FRUIT_FLY_DJENT_N_TOP", 2000))
 SUBGRAPH_SUPERCLASSES = ("cb_intrinsic",)
 DAN_TYPE_REGEX = r"^(PAM|PPL1)"
 

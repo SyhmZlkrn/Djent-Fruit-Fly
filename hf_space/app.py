@@ -1,4 +1,4 @@
-"""FlyBrain Composer — riff generator demo (Hugging Face Space).
+"""Fruit Fly Djent — riff generator demo (Hugging Face Space).
 
 A fruit fly's connectome (MaleCNS, 2,318 central-brain neurons, wiring never modified) is used as a
 fixed reservoir; a read-out fitted to riffs from djent tabs decodes its activity into notes. Here the
@@ -24,15 +24,15 @@ os.environ.setdefault("OMP_NUM_THREADS", "2")
 import spaces  # noqa: E402  — ZeroGPU: the platform requires a @spaces.GPU function (the maths is NumPy either way)
 import gradio as gr  # noqa: E402
 
-from flybrain_composer.generate import generate_riffs  # noqa: E402
-from flybrain_composer.stage_run import export_run  # noqa: E402
+from fruit_fly_djent.generate import generate_riffs  # noqa: E402
+from fruit_fly_djent.stage_run import export_run  # noqa: E402
 
 RUNS = HERE / "runs"                      # one folder per generated riff: what the stage plays
 RUNS.mkdir(exist_ok=True)
 STAGE = HERE / "stage"                    # the three.js stage (fly, brain, guitar; loads a run with ?run=)
 gr.set_static_paths(paths=[str(STAGE), str(RUNS)])
 
-from flybrain_composer.fitness import DEFAULT_WEIGHTS  # noqa: E402
+from fruit_fly_djent.fitness import DEFAULT_WEIGHTS  # noqa: E402
 
 CORPUS = json.loads((HERE / "data" / "cache" / "corpus.json").read_text(encoding="utf-8")) if (HERE / "data" / "cache" / "corpus.json").exists() else {}
 SONGS = CORPUS.get("songs", [])
@@ -119,7 +119,7 @@ def stage_html(run_id: str | None) -> str:
 def run(bars, phrase_bars, bpm, cycle, snare, density, wildness, generations, seed, drums=False, st=None):
     t0 = time.time()
     st = dict(st or fresh_taste())
-    out_dir = Path(tempfile.mkdtemp(prefix="flybrain_"))
+    out_dir = Path(tempfile.mkdtemp(prefix="fruit_fly_djent_"))
 
     def cb(k, n, msg):
         print(f"[space] riff {k}/{n}: {msg}", flush=True)
@@ -157,9 +157,9 @@ def run(bars, phrase_bars, bpm, cycle, snare, density, wildness, generations, se
     return str(out["wav"]), str(out["midi"]), summary, rows, st, taste_text(st), stage_html(run_id)
 
 
-with gr.Blocks(title="FlyBrain Composer — a fruit fly's brain makes up djent riffs") as demo:
+with gr.Blocks(title="Fruit Fly Djent — a fruit fly's brain makes up djent riffs") as demo:
     gr.Markdown(
-        "# 🪰 FlyBrain Composer — riffs from a fruit fly's brain\n"
+        "# 🪰 Fruit Fly Djent — riffs from a fruit fly's brain\n"
         "The real synaptic wiring of a male fruit fly ([MaleCNS](https://neuprint.janelia.org), 2,318 central-brain "
         "neurons, never modified) is used as a fixed reservoir. A read-out fitted to riffs from "
         f"{len(SONGS) or 'a set of'} djent tabs decodes its activity into notes; here the brain is driven with a bar "

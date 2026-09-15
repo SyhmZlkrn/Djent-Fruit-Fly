@@ -255,7 +255,7 @@ def simulate(song: Song, notes: list[Note] | None = None, *, backend: str = "bri
 
 def load_raster(path: Path = SPIKES_PATH) -> pd.DataFrame:
     if not Path(path).exists():
-        raise FileNotFoundError("No spike raster. Run: python -m flybrain_composer.cli spikes")
+        raise FileNotFoundError("No spike raster. Run: python -m fruit_fly_djent.cli spikes")
     return pd.read_parquet(path)
 
 

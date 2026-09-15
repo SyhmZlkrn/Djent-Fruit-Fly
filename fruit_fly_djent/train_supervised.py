@@ -82,7 +82,7 @@ def compose(model: ComposerModel | None = None, song: Song | None = None, *, out
     X, U = model.drive(song, progress=verbose, extra=extra)
     Yhat = model.readout(X, U)
     notes = transfer_articulation(decode_notes(Yhat, model.layout), song.notes)
-    out_midi = Path(out_midi or (config.OUTPUT_DIR / "flybrain_rational_gaze.mid"))
+    out_midi = Path(out_midi or (config.OUTPUT_DIR / "fruit_fly_djent_rational_gaze.mid"))
     notes_to_midi(notes, out_midi, bpm=song.bpm, drums=song.drums if with_drums else None)
     report = diff_notes(notes, song.notes, bpm=song.bpm)
     if verbose:

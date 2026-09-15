@@ -144,7 +144,7 @@ def pull_subgraph(n_top: int | None = None, cache_dir: Path = config.CACHE_DIR,
 def load_subgraph(cache_dir: Path = config.CACHE_DIR) -> tuple[pd.DataFrame, pd.DataFrame]:
     cache_dir = Path(cache_dir)
     if not _neurons_path(cache_dir).exists():
-        raise FileNotFoundError(f"No cached subgraph in {cache_dir}. Run: python -m flybrain_composer.cli pull")
+        raise FileNotFoundError(f"No cached subgraph in {cache_dir}. Run: python -m fruit_fly_djent.cli pull")
     return pd.read_parquet(_neurons_path(cache_dir)), pd.read_parquet(_edges_path(cache_dir))
 
 

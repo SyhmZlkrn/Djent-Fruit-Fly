@@ -3,7 +3,7 @@ brain, in the browser — no Python at show time. Free to host (static Hugging F
 
     python hf_space/build_stage.py --seed 7 --bars 48 --bpm 140 --cycle 23 [--out build/stage_static]
 
-Steps: generate the riff (or reuse output/flybrain_djent_<tag>.*), export notes/drums/sections/song for
+Steps: generate the riff (or reuse output/fruit_fly_djent_<tag>.*), export notes/drums/sections/song for
 the stage, render guitar + drums stems to mp3, run the numpy LIF on the multi-song model's inputs for the
 spike raster, copy the fly / guitar / brain / region assets from stage/data (built by `stage-export`), copy
 the page with STATIC_STAGE set (hides the conductor / live-learning / generator buttons, which need Python).
@@ -21,13 +21,13 @@ import numpy as np
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from flybrain_composer import config  # noqa: E402
-from flybrain_composer.corpus import MODEL_MULTI_PATH, synthetic_song  # noqa: E402
-from flybrain_composer.generate import generate_riffs  # noqa: E402
-from flybrain_composer.transcription import Note, Section, Song  # noqa: E402
+from fruit_fly_djent import config  # noqa: E402
+from fruit_fly_djent.corpus import MODEL_MULTI_PATH, synthetic_song  # noqa: E402
+from fruit_fly_djent.generate import generate_riffs  # noqa: E402
+from fruit_fly_djent.transcription import Note, Section, Song  # noqa: E402
 
 README = """---
-title: FlyBrain Composer — the fly plays a riff it made up
+title: Fruit Fly Djent — the fly plays a riff it made up
 emoji: 🎸
 colorFrom: red
 colorTo: purple
@@ -38,7 +38,7 @@ license: gpl-3.0
 short_description: A scanned fruit fly plays a riff its own brain made up
 ---
 
-# 🎸 FlyBrain Composer — the stage
+# 🎸 Fruit Fly Djent — the stage
 
 A NeuroMechFly body (EPFL's micro-CT scan of a real fly, 70 articulated parts) plays a riff that a fruit fly's
 connectome made up (MaleCNS, 2,318 central-brain neurons used as a fixed reservoir; a read-out fitted to riffs
@@ -68,10 +68,10 @@ def main():
     a = ap.parse_args()
     import pretty_midi
     import soundfile as sf
-    from flybrain_composer.bridgelite import render_drums
-    from flybrain_composer.live import PhraseRenderer, finger
-    from flybrain_composer.model import ComposerModel
-    from flybrain_composer.stage_export import export_song
+    from fruit_fly_djent.bridgelite import render_drums
+    from fruit_fly_djent.live import PhraseRenderer, finger
+    from fruit_fly_djent.model import ComposerModel
+    from fruit_fly_djent.stage_export import export_song
 
     out = Path(a.out)
     if out.exists():
@@ -101,7 +101,7 @@ def main():
     L16 = a.phrase_bars * 16
     sections = [Section((p["source"] or f"riff {p['phrase'] + 1}").split(" + ")[0].replace("|", " · ")[:40],
                         p["phrase"] * L16, (p["phrase"] + 1) * L16) for p in phrases]
-    song = Song(f"FlyBrain djent — riff seed {a.seed}", gen["bpm"], notes, drums=drums, sections=sections,
+    song = Song(f"Fruit Fly Djent — riff seed {a.seed}", gen["bpm"], notes, drums=drums, sections=sections,
                 riff_starts=[float(t) for t in np.arange(0, len(phrases) * L16, a.cycle)],
                 meta={"synthetic": True, "cycle16": a.cycle, "generated": True})
 
@@ -132,8 +132,8 @@ def main():
     (data / "stems.json").write_text(json.dumps({"stems": stems, "mix": True, "bpm": song.bpm}))
 
     # 4) the spiking brain hearing this riff: numpy LIF on the multi-song model's inputs
-    from flybrain_composer.meter import build_streams_ex, stack_streams
-    from flybrain_composer.snn import LIFParams, NumpyLIF, grid_dt_ms, meter_current, onset_current, onset_population, recurrent_weights
+    from fruit_fly_djent.meter import build_streams_ex, stack_streams
+    from fruit_fly_djent.snn import LIFParams, NumpyLIF, grid_dt_ms, meter_current, onset_current, onset_population, recurrent_weights
     p = LIFParams()
     We, Wi = recurrent_weights(model, p)
     U = stack_streams(build_streams_ex(song, form_mode="code", song_key="gen"))
@@ -156,7 +156,7 @@ def main():
         if (src / name).exists():
             shutil.copy(src / name, data / name)
         else:
-            print(f"[stage] missing {name} — run: python -m flybrain_composer.cli stage-export", flush=True)
+            print(f"[stage] missing {name} — run: python -m fruit_fly_djent.cli stage-export", flush=True)
 
     # 6) the page, flagged static
     for name in ("app.js", "fly.js", "guitar.js", "brain.js"):
@@ -164,9 +164,9 @@ def main():
     shutil.copytree(ROOT / "stage" / "vendor", out / "vendor")
     html = (ROOT / "stage" / "index.html").read_text(encoding="utf-8")
     html = html.replace("<script type=\"importmap\">", "<script>window.STATIC_STAGE = true;</script>\n<script type=\"importmap\">", 1)
-    html = html.replace("<h2>FlyBrain Composer — the stage</h2>", "<h2>FlyBrain Composer — a fly plays a riff its brain made up</h2>", 1)
-    html = html.replace("<h1><span>FlyBrain Composer</span> — a fly plays Rational Gaze</h1>",
-                        "<h1><span>FlyBrain Composer</span> — a fly plays a riff its brain made up</h1>", 1)
+    html = html.replace("<h2>Fruit Fly Djent — the stage</h2>", "<h2>Fruit Fly Djent — a fly plays a riff its brain made up</h2>", 1)
+    html = html.replace("<h1><span>Fruit Fly Djent</span> — a fly plays Rational Gaze</h1>",
+                        "<h1><span>Fruit Fly Djent</span> — a fly plays a riff its brain made up</h1>", 1)
     html = html.replace("plays Meshuggah's <i>Rational Gaze</i> on an 8-string Ibanez M8M.",
                         f"plays a {a.bars}-bar riff that a fruit fly's connectome made up (a read-out over 19 djent tabs, "
                         f"nine musical knobs searched by reward) on an 8-string Ibanez M8M.", 1)

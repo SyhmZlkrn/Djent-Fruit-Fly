@@ -1,6 +1,6 @@
 """Control experiments — does the fly's *specific* wiring matter for Stage A?
 
-    python -m flybrain_composer.cli controls
+    python -m fruit_fly_djent.cli controls
 
 Refits the Stage A read-out on the same inputs and targets with the reservoir replaced by:
 the inputs alone (no brain), the connectome with its synaptic partners shuffled, a random sparse

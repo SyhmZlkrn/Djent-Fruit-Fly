@@ -1,4 +1,4 @@
-"""FlyBrain Composer — the MaleCNS connectome as a fixed reservoir that plays Meshuggah.
+"""Fruit Fly Djent — the MaleCNS connectome as a fixed reservoir that plays Meshuggah.
 
 Pipeline (see PROJECT_PLAN.md):
   connectome  -> pull a central-brain subgraph from neuPrint, cache it, build the signed weight matrix

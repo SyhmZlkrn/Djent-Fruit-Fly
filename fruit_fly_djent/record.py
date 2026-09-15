@@ -164,8 +164,8 @@ def render_stems(song: Song, notes: list[Note], *, bpm: float | None = None, out
     peak = float(np.abs(mix).max()) or 1.0
     if peak > 0.98:
         mix *= 0.98 / peak
-    sf.write(str(config.OUTPUT_DIR / "flybrain_rational_gaze_8ridgelite.wav"), mix, sr, subtype="PCM_24")
-    stems["mix"] = str(config.OUTPUT_DIR / "flybrain_rational_gaze_8ridgelite.wav")
+    sf.write(str(config.OUTPUT_DIR / "fruit_fly_djent_rational_gaze_8ridgelite.wav"), mix, sr, subtype="PCM_24")
+    stems["mix"] = str(config.OUTPUT_DIR / "fruit_fly_djent_rational_gaze_8ridgelite.wav")
     (out_dir / "stems.json").write_text(json.dumps(stems, indent=1))
     if verbose:
         print(f"[stems] bpm {bpm:.2f}: " + ", ".join(k for k in ("guitar", "drums", "backing") if k in stems)

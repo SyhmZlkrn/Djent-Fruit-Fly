@@ -135,7 +135,7 @@ def build_cache(force: bool = False) -> pd.DataFrame:
 
 def load_cache() -> pd.DataFrame:
     if not SKEL_PARQUET.exists():
-        raise FileNotFoundError("No skeleton cache. Run: python -m flybrain_composer.cli skeletons")
+        raise FileNotFoundError("No skeleton cache. Run: python -m fruit_fly_djent.cli skeletons")
     return pd.read_parquet(SKEL_PARQUET)
 
 

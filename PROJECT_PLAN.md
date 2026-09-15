@@ -1,4 +1,4 @@
-# FlyBrain Composer — teaching the MaleCNS connectome to play Meshuggah's "Rational Gaze"
+# Fruit Fly Djent — teaching the MaleCNS connectome to play Meshuggah's "Rational Gaze"
 
 > Status: **built** (2026-09-14) — see `README.md` for the pipeline, commands and results. This file is the original design document; deviations: a Fourier phase code + form/section inputs were added to the meter streams (needed for a full-rank reservoir), the transcription source is the tab-only PDF (OMR in `pdftab.py`) with GP7 `.gp` support, and three extras were added on top of the plan: a faithful port of the 8ridge lite sampler, a Brian2 spiking simulation shown live on NAVis skeletons, and a three.js stage where a NeuroMechFly body plays an Ibanez M8M.
 
@@ -115,7 +115,7 @@ Fruit Fly/
   README.md
   requirements.txt
   .env.example                    # NEUPRINT_APPLICATION_CREDENTIALS placeholder — never commit the real token
-  flybrain_composer/
+  fruit_fly_djent/
     __init__.py
     connectome.py                 # neuprint queries -> cached neuron table + sparse weight matrix
     reservoir.py                  # leaky nonlinear dynamics over the connectome graph
@@ -125,7 +125,7 @@ Fruit Fly/
     train_reward.py               # Stage B: perturb-and-reinforce improvisation shaping
     fitness.py                    # djent-groove scoring functions used by Stage B
     sonify.py                     # activity/readout -> MIDI events -> .mid file
-    cli.py                        # `python -m flybrain_composer.cli pull|fit|compose|shape`
+    cli.py                        # `python -m fruit_fly_djent.cli pull|fit|compose|shape`
   data/
     cache/                        # parquet files (gitignored)
     rational_gaze.gp5             # source transcription (check licensing before sharing)

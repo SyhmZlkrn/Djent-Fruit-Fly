@@ -118,7 +118,7 @@ class BrainScene:
 
 class BrainViewer:
     def __init__(self, scene: BrainScene | None = None, size=(1400, 900), offscreen: bool = False,
-                 title: str = "FlyBrain Composer — MaleCNS live", show_rois: bool = True,
+                 title: str = "Fruit Fly Djent — MaleCNS live", show_rois: bool = True,
                  line_width: float = 1.0, max_fps: int = 60, zoom: float = 1.9):
         import octarine as oc
         import pygfx as gfx

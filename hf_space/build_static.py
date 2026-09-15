@@ -15,7 +15,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 README = """---
-title: FlyBrain Composer — a fruit fly's brain plays djent
+title: Fruit Fly Djent — a fruit fly's brain plays djent
 emoji: 🪰
 colorFrom: purple
 colorTo: red
@@ -26,7 +26,7 @@ license: gpl-3.0
 short_description: A fruit fly's connectome plays and improvises djent
 ---
 
-# 🪰 FlyBrain Composer
+# 🪰 Fruit Fly Djent
 
 The real synaptic wiring of a male fruit fly (**MaleCNS**, Janelia FlyEM — 2,318 central-brain neurons,
 236,870 connections, never modified) is used as a fixed *reservoir*: a read-out fitted to a tab replays
@@ -55,7 +55,7 @@ HERO = """
       <figure style="margin:0"><figcaption style="margin:0 0 4px;font-size:13px">32 bars · 140 BPM · 23/16 · snare 2&amp;4</figcaption><audio controls preload="none" style="width:100%" src="audio/preview_djent_seed3.mp3"></audio></figure>
       <figure style="margin:0"><figcaption style="margin:0 0 4px;font-size:13px">32 bars · 140 BPM · 25/16 · snare in thirds</figcaption><audio controls preload="none" style="width:100%" src="audio/preview_djent_seed4.mp3"></audio></figure>
     </div>
-    <p class="note" style="margin-top:14px"><b>Run it yourself</b> (desktop; free): <code>git clone https://github.com/SyhmZlkrn/Djent-Fruit-Fly</code> → <code>pip install -r requirements.txt</code> → put Guitar Pro tabs in <code>data/songs/</code> → <code>python -m flybrain_composer.cli fit-multi</code> → <code>python -m flybrain_composer.cli generate --bars 32 --bpm 140 --cycle 23 --snare thirds</code>, or the whole live show: <code>python -m flybrain_composer.stage_server</code> and press <b>🎸 Own riffs</b> on the page. Hosting the Gradio generator on Hugging Face needs a PRO plan, so the interactive demo is offline — the repo includes it (<code>hf_space/app.py</code>).</p>
+    <p class="note" style="margin-top:14px"><b>Run it yourself</b> (desktop; free): <code>git clone https://github.com/SyhmZlkrn/Djent-Fruit-Fly</code> → <code>pip install -r requirements.txt</code> → put Guitar Pro tabs in <code>data/songs/</code> → <code>python -m fruit_fly_djent.cli fit-multi</code> → <code>python -m fruit_fly_djent.cli generate --bars 32 --bpm 140 --cycle 23 --snare thirds</code>, or the whole live show: <code>python -m fruit_fly_djent.stage_server</code> and press <b>🎸 Own riffs</b> on the page. Hosting the Gradio generator on Hugging Face needs a PRO plan, so the interactive demo is offline — the repo includes it (<code>hf_space/app.py</code>).</p>
   </div>
 </section>
 """

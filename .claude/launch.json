@@ -6,7 +6,7 @@
       "runtimeExecutable": ".venv/Scripts/python.exe",
       "runtimeArgs": [
         "-m",
-        "flybrain_composer.stage_server",
+        "fruit_fly_djent.stage_server",
         "8000"
       ],
       "port": 8000

@@ -1,10 +1,10 @@
 """A corpus of djent tabs -> one shared read-out -> riffs of the fly's own.
 
     data/songs/*.gp | *.gp5 | *.gp4 | *.gp3 | *.pdf      (drop tabs here; audio is not used for learning)
-    python -m flybrain_composer.cli corpus               # list what loads, how each is transposed
-    python -m flybrain_composer.cli fit-multi            # shared read-out -> data/cache/model_multi.npz
-    python -m flybrain_composer.cli generate --bars 32   # riffs of its own -> output/flybrain_djent_*.mid/.wav
-    python -m flybrain_composer.cli play --generate      # live: the fly plays riffs it makes up, 👍/👎 steer it
+    python -m fruit_fly_djent.cli corpus               # list what loads, how each is transposed
+    python -m fruit_fly_djent.cli fit-multi            # shared read-out -> data/cache/model_multi.npz
+    python -m fruit_fly_djent.cli generate --bars 32   # riffs of its own -> output/fruit_fly_djent_*.mid/.wav
+    python -m fruit_fly_djent.cli play --generate      # live: the fly plays riffs it makes up, 👍/👎 steer it
 
 The fly learns from *tabs* (Guitar Pro files or the tab-only PDF layout the OMR reads), not from
 audio — the read-out is fitted to a piano roll, and only a transcription gives one. Every song is
@@ -309,7 +309,7 @@ def learned_codes(model: ComposerModel) -> dict[str, np.ndarray]:
 # ----------------------------------------------------------------------------------------------
 # a song that does not exist yet: the frame the generator improvises into
 # ----------------------------------------------------------------------------------------------
-def synthetic_song(bpm: float, phrases: int, phrase_bars: int, cycle16: int, title: str = "FlyBrain djent") -> Song:
+def synthetic_song(bpm: float, phrases: int, phrase_bars: int, cycle16: int, title: str = "Fruit Fly Djent") -> Song:
     """Empty-guitar song with a basic kick/snare grid (so the timeline has a length), one section per
     phrase (named gen0, gen1, ...) and riff cycles of `cycle16` sixteenths."""
     L = phrase_bars * 16

@@ -114,7 +114,7 @@ class ComposerModel:
     def load(cls, path: Path = MODEL_PATH) -> "ComposerModel":
         path = Path(path)
         if not path.exists():
-            raise FileNotFoundError(f"{path} not found — run: python -m flybrain_composer.cli fit")
+            raise FileNotFoundError(f"{path} not found — run: python -m fruit_fly_djent.cli fit")
         z = np.load(path)
         side = json.loads(path.with_suffix(".json").read_text())
         W = sp.csr_matrix((z["W_data"], z["W_indices"], z["W_indptr"]), shape=tuple(z["W_shape"]))

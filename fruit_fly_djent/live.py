@@ -1,7 +1,7 @@
 """Live Stage B — the fly improvises *while it performs*, and can make up riffs of its own.
 
-    python -m flybrain_composer.cli play --improvise          # improvise on the known song
-    python -m flybrain_composer.cli play --generate           # riffs of its own (needs fit-multi)
+    python -m fruit_fly_djent.cli play --improvise          # improvise on the known song
+    python -m fruit_fly_djent.cli play --generate           # riffs of its own (needs fit-multi)
 
 While the current phrase (default 8 bars) plays, a planner process with a pool of workers auditions
 candidate versions of the *next* phrase through the fixed brain. A candidate is a set of nine
@@ -759,7 +759,7 @@ class LivePlanner:
             os.environ.setdefault(v, "2")            # the child inherits this; the parent is already loaded
         ctx = mp.get_context("spawn")
         self.conn, child = ctx.Pipe()
-        self.proc = ctx.Process(target=planner_main, args=(child, cfg), daemon=False, name="flybrain-planner")  # spawns its own worker pool
+        self.proc = ctx.Process(target=planner_main, args=(child, cfg), daemon=False, name="fruit-fly-djent-planner")  # spawns its own worker pool
         self.proc.start()
         self.cfg = cfg
         self.info: dict = {}

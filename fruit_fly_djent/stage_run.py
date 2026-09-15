@@ -33,7 +33,7 @@ def riff_to_song(gen: dict, phrase_bars: int, cycle16: int, seed: int, fmap: dic
     phrases = gen["phrases"]
     sections = [Section((p["source"] or f"riff {p['phrase'] + 1}").split(" + ")[0].replace("|", " · ")[:40],
                         p["phrase"] * L16, (p["phrase"] + 1) * L16) for p in phrases]
-    song = Song(title or f"FlyBrain djent — riff seed {seed}", gen["bpm"], notes, drums=drums, sections=sections,
+    song = Song(title or f"Fruit Fly Djent — riff seed {seed}", gen["bpm"], notes, drums=drums, sections=sections,
                 riff_starts=[float(t) for t in np.arange(0, len(phrases) * L16, cycle16)],
                 tuning=config.TUNING_F_STANDARD, meta={"synthetic": True, "cycle16": cycle16, "generated": True})
     return song, notes

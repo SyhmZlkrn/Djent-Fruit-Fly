@@ -1,10 +1,10 @@
 """Static file server for stage/ that never lets the browser cache (modules change while iterating),
 plus a tiny launcher API so the page's buttons can start the Python conductor themselves:
 
-    python -m flybrain_composer.stage_server [port]
+    python -m fruit_fly_djent.stage_server [port]
 
     GET /api/status                       -> {running, mode, pid, ws_up, since, exit, log[]}
-    GET /api/launch?mode=play|improvise|generate -> starts `python -m flybrain_composer.cli play [--improvise|--generate]`
+    GET /api/launch?mode=play|improvise|generate -> starts `python -m fruit_fly_djent.cli play [--improvise|--generate]`
                  [&restart=1][&window=0]     (restart kills a conductor this server started first)
     GET /api/stop                         -> kills the conductor this server started (and its planner/workers)
     POST /api/screenshot?name=…           -> saves the PNG the stage renders (press X on the page) to output/screenshots/
@@ -105,7 +105,7 @@ def launch(mode: str = "play", restart: bool = False, window: bool = True, extra
     if mode not in ("play", "improvise", "generate"):
         return {"ok": False, "hint": f"unknown mode {mode!r}"}
     if mode == "generate" and not (config.CACHE_DIR / "model_multi.npz").exists():
-        return {"ok": False, "hint": "no multi-song model yet: put tabs in data/songs/ and run `python -m flybrain_composer.cli fit-multi`"}
+        return {"ok": False, "hint": "no multi-song model yet: put tabs in data/songs/ and run `python -m fruit_fly_djent.cli fit-multi`"}
     with _LOCK:
         st = status()
         if st["running"] and not restart:
@@ -120,12 +120,12 @@ def launch(mode: str = "play", restart: bool = False, window: bool = True, extra
             if IS_CONDUCTOR:
                 return {"ok": False, "self": True, **st,
                         "hint": "this page is served by the running conductor itself — start "
-                                "`python -m flybrain_composer.stage_server` (or the 'stage' launch config) "
+                                "`python -m fruit_fly_djent.stage_server` (or the 'stage' launch config) "
                                 "to be able to launch or restart the conductor from here"}
             if not restart:
                 return {"ok": True, "external": True, **st}
             return {"ok": False, **st, "hint": "a conductor that this server did not start is running — stop it first"}
-        args = [sys.executable, "-W", "ignore", "-m", "flybrain_composer.cli", "play"]
+        args = [sys.executable, "-W", "ignore", "-m", "fruit_fly_djent.cli", "play"]
         if mode == "improvise":
             args.append("--improvise")
         elif mode == "generate":

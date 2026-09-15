@@ -1,4 +1,4 @@
-# FlyBrain Composer
+# Fruit Fly Djent
 
 A male fruit fly's real synaptic wiring (the **MaleCNS** connectome) used as a fixed recurrent
 reservoir that learns to play Meshuggah's *Rational Gaze* — rendered through the **8ridge lite**
@@ -61,33 +61,33 @@ Third-party assets (not in git, see `.gitignore`):
 ## Commands
 
 ```bash
-python -m flybrain_composer.cli pull          # neuPrint -> data/cache (neurons.parquet, edges.parquet)
-python -m flybrain_composer.cli skeletons     # NAVis skeletons + 76 region meshes -> data/skeletons
-python -m flybrain_composer.cli fit           # Stage A: drive reservoir, ridge-fit the readout
-python -m flybrain_composer.cli compose       # replay -> output/flybrain_rational_gaze.mid
-python -m flybrain_composer.cli stems         # double-tracked guitar + drums + aligned backing + mix
-python -m flybrain_composer.cli render        # quick single mix through the sampler port
-python -m flybrain_composer.cli spikes        # Brian2 LIF whole-song raster -> data/cache/spikes.parquet
-python -m flybrain_composer.cli shape         # Stage B: reward-modulated improvisation (CMA-ES)
-python -m flybrain_composer.cli compose --stage-b
-python -m flybrain_composer.cli stage-export  # geometry / notes / spikes / audio for stage/
-python -m flybrain_composer.cli play          # audio + live NAVis brain window + stage websocket
-python -m flybrain_composer.cli play --live   # step the numpy LIF in lockstep with the audio clock
-python -m flybrain_composer.cli play --fly-only          # mute the backing track
-python -m flybrain_composer.cli play --midi-out "loopMIDI Port"   # drive the real plugin
-python -m flybrain_composer.cli play --improvise         # LIVE Stage B: the fly improvises on the song, phrase by phrase
-python -m flybrain_composer.cli play --improvise --improv-off     # start faithful, switch learning on from the stage
-python -m flybrain_composer.cli corpus                   # list the tabs in data/songs/ (transposed to the fly's tuning)
-python -m flybrain_composer.cli fit-multi                # one read-out for every tab's riffs -> data/cache/model_multi.npz
-python -m flybrain_composer.cli generate --bars 32 --bpm 140 --cycle 23 --density 9 --snare thirds   # offline riffs -> output/
-python -m flybrain_composer.cli play --generate --phrase-bars 4 --bpm 140 --cycle 23 --density 9     # live; 👍/👎 steer it
-python -m flybrain_composer.cli snapshot 20   # offscreen brain render at t = 20 s
-python -m flybrain_composer.cli midi-ports
-python -m flybrain_composer.cli controls      # shuffled / random reservoirs vs the real wiring -> output/controls.json
-python -m flybrain_composer.stage_server      # serve stage/ on http://localhost:8000 (+ launcher API for the page's buttons)
+python -m fruit_fly_djent.cli pull          # neuPrint -> data/cache (neurons.parquet, edges.parquet)
+python -m fruit_fly_djent.cli skeletons     # NAVis skeletons + 76 region meshes -> data/skeletons
+python -m fruit_fly_djent.cli fit           # Stage A: drive reservoir, ridge-fit the readout
+python -m fruit_fly_djent.cli compose       # replay -> output/fruit_fly_djent_rational_gaze.mid
+python -m fruit_fly_djent.cli stems         # double-tracked guitar + drums + aligned backing + mix
+python -m fruit_fly_djent.cli render        # quick single mix through the sampler port
+python -m fruit_fly_djent.cli spikes        # Brian2 LIF whole-song raster -> data/cache/spikes.parquet
+python -m fruit_fly_djent.cli shape         # Stage B: reward-modulated improvisation (CMA-ES)
+python -m fruit_fly_djent.cli compose --stage-b
+python -m fruit_fly_djent.cli stage-export  # geometry / notes / spikes / audio for stage/
+python -m fruit_fly_djent.cli play          # audio + live NAVis brain window + stage websocket
+python -m fruit_fly_djent.cli play --live   # step the numpy LIF in lockstep with the audio clock
+python -m fruit_fly_djent.cli play --fly-only          # mute the backing track
+python -m fruit_fly_djent.cli play --midi-out "loopMIDI Port"   # drive the real plugin
+python -m fruit_fly_djent.cli play --improvise         # LIVE Stage B: the fly improvises on the song, phrase by phrase
+python -m fruit_fly_djent.cli play --improvise --improv-off     # start faithful, switch learning on from the stage
+python -m fruit_fly_djent.cli corpus                   # list the tabs in data/songs/ (transposed to the fly's tuning)
+python -m fruit_fly_djent.cli fit-multi                # one read-out for every tab's riffs -> data/cache/model_multi.npz
+python -m fruit_fly_djent.cli generate --bars 32 --bpm 140 --cycle 23 --density 9 --snare thirds   # offline riffs -> output/
+python -m fruit_fly_djent.cli play --generate --phrase-bars 4 --bpm 140 --cycle 23 --density 9     # live; 👍/👎 steer it
+python -m fruit_fly_djent.cli snapshot 20   # offscreen brain render at t = 20 s
+python -m fruit_fly_djent.cli midi-ports
+python -m fruit_fly_djent.cli controls      # shuffled / random reservoirs vs the real wiring -> output/controls.json
+python -m fruit_fly_djent.stage_server      # serve stage/ on http://localhost:8000 (+ launcher API for the page's buttons)
 ```
 
-**Running it from the page.** Serve the stage with `python -m flybrain_composer.stage_server` (or the
+**Running it from the page.** Serve the stage with `python -m fruit_fly_djent.stage_server` (or the
 `stage` launch config) and open http://localhost:8000. The page's **⟲ Conductor** button starts
 `cli play` for you (brain window + audio from Python, ~20–40 s to load), **🧠 Live learning** starts
 `cli play --improvise` (or restarts a running conductor with it), **🎸 Own riffs** starts
@@ -206,7 +206,7 @@ over **its own drums**: hats keep the
 tempo (every 8th, louder on the quarters, crash on the phrase downbeat), the **kick follows the riff**
 (one under every guitar onset), the snare is the backbeat — `--snare 24` (beats 2 and 4) or
 `--snare thirds` (every 3 sixteenths, the 3-against-4 displacement feel). `cli generate` does the
-same offline into MIDI + WAV (`output/flybrain_djent_seed*.{mid,wav}`).
+same offline into MIDI + WAV (`output/fruit_fly_djent_seed*.{mid,wav}`).
 
 **Backing track** (`record.py`). Onset-envelope cross-correlation finds where bar 1 starts in the
 recording and its tempo; stems are rendered at that tempo so the fly stays in sync.
@@ -297,7 +297,7 @@ neuPrint caches (pulled with your token). See "Setup" above. The Ibanez M8M mesh
 
 ## License
 
-Code: **GPL-3.0** (`LICENSE`) — `flybrain_composer/bridgelite.py` is a port of the GPL-3.0 8ridge lite sampler
+Code: **GPL-3.0** (`LICENSE`) — `fruit_fly_djent/bridgelite.py` is a port of the GPL-3.0 8ridge lite sampler
 engine, so the project is GPL. Data and third-party assets keep their own licences; the full list with
 attributions is in [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md). In short:
 

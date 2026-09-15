@@ -1,6 +1,6 @@
 # Third-party data, models and code
 
-FlyBrain Composer is licensed under the **GNU General Public License v3.0** (see `LICENSE`). It builds on the
+Fruit Fly Djent is licensed under the **GNU General Public License v3.0** (see `LICENSE`). It builds on the
 following work, none of which is ours. Where an asset is redistributed in this repository or the
 Hugging Face Space, its licence and attribution are given here.
 
@@ -18,7 +18,7 @@ Hugging Face Space, its licence and attribution are given here.
 
 | What | Source | Licence | How it is used |
 |---|---|---|---|
-| **8ridge lite** — 8-string guitar sampler plugin: the `Synthesiser`/`SamplerVoice` logic and the 61 + 61 guitar samples | [James Stubbs (JamesStubbsEng/8ridgelite)](https://github.com/JamesStubbsEng/8ridgelite) | [GPL-3.0](https://www.gnu.org/licenses/gpl-3.0.html) | `flybrain_composer/bridgelite.py` is a Python port of the plugin's sampler engine (hence this project's GPL-3.0 licence). The samples are not in this repository (clone the plugin into `third_party/`); the Space ships them trimmed to 4 s, 16-bit, with the plugin's LICENSE. |
+| **8ridge lite** — 8-string guitar sampler plugin: the `Synthesiser`/`SamplerVoice` logic and the 61 + 61 guitar samples | [James Stubbs (JamesStubbsEng/8ridgelite)](https://github.com/JamesStubbsEng/8ridgelite) | [GPL-3.0](https://www.gnu.org/licenses/gpl-3.0.html) | `fruit_fly_djent/bridgelite.py` is a Python port of the plugin's sampler engine (hence this project's GPL-3.0 licence). The samples are not in this repository (clone the plugin into `third_party/`); the Space ships them trimmed to 4 s, 16-bit, with the plugin's LICENSE. |
 | **three.js** r170 and addons (GLTFLoader, OrbitControls, UnrealBloomPass, …) | [three.js authors](https://threejs.org) | MIT (`stage/vendor/THREE_LICENSE`) | Vendored in `stage/vendor/` for the stage. |
 | **Brian2** | Brian2 developers | CeCILL 2.1 | Spiking simulation (dependency). |
 | **NAVis**, **octarine**, **pygfx**, **wgpu-py** | their authors | GPL-3.0 / MIT / BSD-2 / BSD-2 | Skeleton processing and the live brain window (dependencies). |

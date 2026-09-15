@@ -1,4 +1,4 @@
-// FlyBrain Composer stage: the NeuroMechFly body plays the Ibanez M8M while the MaleCNS brain spikes.
+// Fruit Fly Djent stage: the NeuroMechFly body plays the Ibanez M8M while the MaleCNS brain spikes.
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -138,7 +138,7 @@ function buildFly(model, rig) {
 // as a line you can paste here.
 const GUITAR_DEFAULT = { dx: 0.52, dy: -0.80, dz: 0.24, tilt: 30, yaw: 10, roll: 20 };   // dx: toward audience, dy: up, dz: fly's right; angles in degrees
 S.guitarPlace = { ...GUITAR_DEFAULT };
-try { const saved = JSON.parse(localStorage.getItem('flybrain.guitarPlace') || 'null'); if (saved) Object.assign(S.guitarPlace, saved); } catch (e) { }
+try { const saved = JSON.parse(localStorage.getItem('fruitflydjent.guitarPlace') || 'null'); if (saved) Object.assign(S.guitarPlace, saved); } catch (e) { }
 
 function applyGuitarPlacement() {
   const g = S.guitar, P = S.guitarPlace;
@@ -196,7 +196,7 @@ function placementKey(e) {
   const fn = map[e.key] || map[e.key.toLowerCase()];
   if (!fn) return false;
   fn();
-  try { localStorage.setItem('flybrain.guitarPlace', JSON.stringify(P)); } catch (err) { }
+  try { localStorage.setItem('fruitflydjent.guitarPlace', JSON.stringify(P)); } catch (err) { }
   applyGuitarPlacement();
   e.preventDefault();
   return true;
@@ -458,7 +458,7 @@ async function refreshLauncher() {
   return st;
 }
 function manualHint(mode) {
-  return '(cannot start it from here: serve the page with `python -m flybrain_composer.stage_server`, or run `python -m flybrain_composer.cli play' + (mode === 'improvise' ? ' --improvise' : '') + '` yourself and press Conductor)';
+  return '(cannot start it from here: serve the page with `python -m fruit_fly_djent.stage_server`, or run `python -m fruit_fly_djent.cli play' + (mode === 'improvise' ? ' --improvise' : '') + '` yourself and press Conductor)';
 }
 async function ensureConductor(mode, restart = false) {
   // resolves true once a conductor websocket is reachable; starts one (or restarts it) through the stage server

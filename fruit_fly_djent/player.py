@@ -1,6 +1,6 @@
 """The conductor: one clock drives the audio, the spiking brain, the NAVis window and the stage.
 
-    python -m flybrain_composer.cli play [--live] [--midi-out "loopMIDI Port"] [--no-window]
+    python -m fruit_fly_djent.cli play [--live] [--midi-out "loopMIDI Port"] [--no-window]
 
 * audio: the fly-brain MIDI rendered through the 8ridge lite engine port (+ amp + drums) is
   streamed with sounddevice; the DAC time of the stream is the master clock;

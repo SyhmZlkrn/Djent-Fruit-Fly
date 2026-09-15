@@ -21,7 +21,7 @@ ROOT = Path(__file__).resolve().parents[1]
 SAMPLE_SECONDS = 4.0
 
 README = """---
-title: FlyBrain Composer — riffs from a fruit fly's brain
+title: Fruit Fly Djent — riffs from a fruit fly's brain
 emoji: 🪰
 colorFrom: purple
 colorTo: red
@@ -33,7 +33,7 @@ license: gpl-3.0
 short_description: A fruit fly's connectome makes up djent riffs
 ---
 
-# 🪰 FlyBrain Composer — riffs from a fruit fly's brain
+# 🪰 Fruit Fly Djent — riffs from a fruit fly's brain
 
 The real synaptic wiring of a male fruit fly (**MaleCNS**, Janelia FlyEM — 2,318 central-brain neurons,
 236,870 connections, never modified) is used as a fixed *reservoir*. A read-out fitted to riffs from djent
@@ -86,7 +86,7 @@ def main():
         shutil.rmtree(out)
     out.mkdir(parents=True)
     # package (no caches)
-    shutil.copytree(ROOT / "flybrain_composer", out / "flybrain_composer", ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
+    shutil.copytree(ROOT / "fruit_fly_djent", out / "fruit_fly_djent", ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
     shutil.copy(ROOT / "hf_space" / "app.py", out / "app.py")
     shutil.copy(ROOT / "hf_space" / "requirements.txt", out / "requirements.txt")
     shutil.copy(ROOT / "LICENSE", out / "LICENSE")
@@ -112,9 +112,9 @@ def main():
     shutil.copytree(ROOT / "stage" / "vendor", stage / "vendor")
     html = (ROOT / "stage" / "index.html").read_text(encoding="utf-8")
     html = html.replace('<script type="importmap">', '<script>window.STATIC_STAGE = true;</script>\n<script type="importmap">', 1)
-    html = html.replace("<h1><span>FlyBrain Composer</span> — a fly plays Rational Gaze</h1>",
-                        "<h1><span>FlyBrain Composer</span> — a fly plays the riff you just made</h1>", 1)
-    html = html.replace("<h2>FlyBrain Composer — the stage</h2>", "<h2>Your riff, played by the fly</h2>", 1)
+    html = html.replace("<h1><span>Fruit Fly Djent</span> — a fly plays Rational Gaze</h1>",
+                        "<h1><span>Fruit Fly Djent</span> — a fly plays the riff you just made</h1>", 1)
+    html = html.replace("<h2>Fruit Fly Djent — the stage</h2>", "<h2>Your riff, played by the fly</h2>", 1)
     html = html.replace("plays Meshuggah's <i>Rational Gaze</i> on an 8-string Ibanez M8M.",
                         "plays the riff its brain just made up on an 8-string Ibanez M8M.", 1)
     html = html.replace("The notes were composed by a reservoir built from the MaleCNS connectome; the brain above the stage is the\n       same 2,318 neurons spiking in a Brian2 simulation, replayed in sync with the music.",
@@ -125,7 +125,7 @@ def main():
         if src_f.exists():
             shutil.copy(src_f, stage / "data" / name)
         else:
-            print(f"[space] missing stage asset {name} — run: python -m flybrain_composer.cli stage-export")
+            print(f"[space] missing stage asset {name} — run: python -m fruit_fly_djent.cli stage-export")
     (out / "runs").mkdir()
     (out / "runs" / ".gitkeep").write_text("")
     import gradio

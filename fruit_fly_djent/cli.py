@@ -1,21 +1,21 @@
 """Command line entry point.
 
-    python -m flybrain_composer.cli pull            # neuPrint -> data/cache (neurons + edges)
-    python -m flybrain_composer.cli skeletons       # NAVis skeletons + ROI meshes -> data/skeletons
-    python -m flybrain_composer.cli fit             # Stage A ridge readout on the guitar part
-    python -m flybrain_composer.cli compose         # replay -> output/flybrain_rational_gaze.mid
-    python -m flybrain_composer.cli render          # MIDI -> 8ridge lite engine port -> .wav
-    python -m flybrain_composer.cli stems           # stereo double-tracked guitar + backing track stems + mix
-    python -m flybrain_composer.cli spikes          # Brian2 whole-song spiking simulation
-    python -m flybrain_composer.cli shape           # Stage B reward-modulated improvisation
-    python -m flybrain_composer.cli stage-export    # geometry/notes/spikes for the three.js stage
-    python -m flybrain_composer.cli play            # audio + live NAVis brain + stage + MIDI out
-    python -m flybrain_composer.cli play --improvise # live Stage B: the fly improvises phrase by phrase
-    python -m flybrain_composer.cli snapshot 12.5   # offscreen brain render at t = 12.5 s
-    python -m flybrain_composer.cli midi-ports      # list MIDI outputs (for --midi-out)
-    python -m flybrain_composer.cli controls        # shuffled / random reservoirs vs the real wiring
-    python -m flybrain_composer.cli corpus / fit-multi / generate   # many tabs -> one read-out -> riffs of its own
-    python -m flybrain_composer.cli play --generate # live: the fly plays riffs it makes up; 👍/👎 steer it
+    python -m fruit_fly_djent.cli pull            # neuPrint -> data/cache (neurons + edges)
+    python -m fruit_fly_djent.cli skeletons       # NAVis skeletons + ROI meshes -> data/skeletons
+    python -m fruit_fly_djent.cli fit             # Stage A ridge readout on the guitar part
+    python -m fruit_fly_djent.cli compose         # replay -> output/fruit_fly_djent_rational_gaze.mid
+    python -m fruit_fly_djent.cli render          # MIDI -> 8ridge lite engine port -> .wav
+    python -m fruit_fly_djent.cli stems           # stereo double-tracked guitar + backing track stems + mix
+    python -m fruit_fly_djent.cli spikes          # Brian2 whole-song spiking simulation
+    python -m fruit_fly_djent.cli shape           # Stage B reward-modulated improvisation
+    python -m fruit_fly_djent.cli stage-export    # geometry/notes/spikes for the three.js stage
+    python -m fruit_fly_djent.cli play            # audio + live NAVis brain + stage + MIDI out
+    python -m fruit_fly_djent.cli play --improvise # live Stage B: the fly improvises phrase by phrase
+    python -m fruit_fly_djent.cli snapshot 12.5   # offscreen brain render at t = 12.5 s
+    python -m fruit_fly_djent.cli midi-ports      # list MIDI outputs (for --midi-out)
+    python -m fruit_fly_djent.cli controls        # shuffled / random reservoirs vs the real wiring
+    python -m fruit_fly_djent.cli corpus / fit-multi / generate   # many tabs -> one read-out -> riffs of its own
+    python -m fruit_fly_djent.cli play --generate # live: the fly plays riffs it makes up; 👍/👎 steer it
 """
 from __future__ import annotations
 
@@ -30,8 +30,8 @@ warnings.filterwarnings("ignore")
 
 from . import config  # noqa: E402
 
-MIDI_OUT = config.OUTPUT_DIR / "flybrain_rational_gaze.mid"
-WAV_OUT = config.OUTPUT_DIR / "flybrain_rational_gaze_8ridgelite.wav"
+MIDI_OUT = config.OUTPUT_DIR / "fruit_fly_djent_rational_gaze.mid"
+WAV_OUT = config.OUTPUT_DIR / "fruit_fly_djent_rational_gaze_8ridgelite.wav"
 
 
 def cmd_pull(a):
@@ -57,7 +57,7 @@ def cmd_compose(a):
     from .train_supervised import compose
     from .transcription import load_song
     model = ComposerModel.load(MODEL_B_PATH) if a.stage_b else None
-    out = a.out or (config.OUTPUT_DIR / "flybrain_rational_gaze_improv.mid" if a.stage_b else MIDI_OUT)
+    out = a.out or (config.OUTPUT_DIR / "fruit_fly_djent_rational_gaze_improv.mid" if a.stage_b else MIDI_OUT)
     compose(model, load_song(a.gp, track=a.track), out_midi=out, dan_reward=a.reward)
 
 
@@ -138,7 +138,7 @@ def cmd_play(a):
         from .live import LivePlanner, PlannerConfig
         from .model import ComposerModel
         if not MODEL_MULTI_PATH.exists():
-            raise SystemExit("no multi-song model yet — put tabs in data/songs/ and run: python -m flybrain_composer.cli fit-multi")
+            raise SystemExit("no multi-song model yet — put tabs in data/songs/ and run: python -m fruit_fly_djent.cli fit-multi")
         stats = ComposerModel.load(MODEL_MULTI_PATH).meta.get("multi", {}).get("stats", {})
         bpm = a.bpm or float(stats.get("bpm", config.BPM))
         song = synthetic_song(bpm, a.phrases, a.phrase_bars, a.cycle)
@@ -232,7 +232,7 @@ def main(argv=None):
             stream.reconfigure(encoding="utf-8", errors="replace")
         except (AttributeError, ValueError):
             pass
-    ap = argparse.ArgumentParser(prog="flybrain_composer", description=__doc__,
+    ap = argparse.ArgumentParser(prog="fruit_fly_djent", description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--gp", help="Guitar Pro file (default: data/rational_gaze.gp)")
     ap.add_argument("--track", default="Rhythm", help="guitar track to learn (name substring or index)")
@@ -253,7 +253,7 @@ def main(argv=None):
     p = sub.add_parser("controls", help="does the fly's specific wiring matter? refit Stage A on shuffled / random reservoirs"); p.set_defaults(fn=cmd_controls)
     p = sub.add_parser("corpus", help="list the tabs in data/songs/ (and how each is transposed to the fly's tuning)"); p.set_defaults(fn=cmd_corpus)
     p = sub.add_parser("fit-multi", help="one shared read-out for every tab in data/songs/ -> data/cache/model_multi.npz"); p.add_argument("--lam", type=float, default=2e-4); p.add_argument("--bars-per-song", type=int, default=16, help="fit each song's most characteristic riffs (this many bars); 0 = whole songs"); p.add_argument("--expand", type=int, default=6000, help="random tanh features of the neuron states added to the read-out (0 = linear read-out, ~one song of capacity)"); p.set_defaults(fn=cmd_fit_multi)
-    p = sub.add_parser("generate", help="offline: the fly makes up djent riffs from the multi-song read-out -> output/flybrain_djent_*.mid/.wav"); p.add_argument("--bars", type=int, default=32); p.add_argument("--phrase-bars", type=int, default=4); p.add_argument("--bpm", type=float, default=None); p.add_argument("--cycle", type=int, default=25); p.add_argument("--wildness", type=float, default=0.5); p.add_argument("--generations", type=int, default=10); p.add_argument("--seed", type=int, default=0); p.add_argument("--snare", choices=["24", "thirds"], default="24"); p.add_argument("--density", type=float, default=None, help="notes per bar to aim for (default: corpus median)"); p.add_argument("--drums", action="store_true", help="add the synthesized riff-locked drum kit (default: guitar only)"); p.set_defaults(fn=cmd_generate)
+    p = sub.add_parser("generate", help="offline: the fly makes up djent riffs from the multi-song read-out -> output/fruit_fly_djent_*.mid/.wav"); p.add_argument("--bars", type=int, default=32); p.add_argument("--phrase-bars", type=int, default=4); p.add_argument("--bpm", type=float, default=None); p.add_argument("--cycle", type=int, default=25); p.add_argument("--wildness", type=float, default=0.5); p.add_argument("--generations", type=int, default=10); p.add_argument("--seed", type=int, default=0); p.add_argument("--snare", choices=["24", "thirds"], default="24"); p.add_argument("--density", type=float, default=None, help="notes per bar to aim for (default: corpus median)"); p.add_argument("--drums", action="store_true", help="add the synthesized riff-locked drum kit (default: guitar only)"); p.set_defaults(fn=cmd_generate)
 
     a = ap.parse_args(argv)
     a.fn(a)

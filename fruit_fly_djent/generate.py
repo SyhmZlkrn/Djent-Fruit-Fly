@@ -1,7 +1,7 @@
 """Offline riff generator — the same brain, reader and knobs as ``play --generate``, with a fixed
 candidate budget instead of the audio clock. Used by ``cli generate`` and by the Hugging Face Space.
 
-    from flybrain_composer.generate import generate_riffs
+    from fruit_fly_djent.generate import generate_riffs
     out = generate_riffs(bars=16, bpm=140, cycle16=23, snare="24", density=9, seed=0)
     out["wav"], out["midi"], out["phrases"]
 """
@@ -39,7 +39,7 @@ def generate_riffs(*, bars: int = 16, phrase_bars: int = 4, bpm: float | None = 
 
     model_path = Path(model_path or MODEL_MULTI_PATH)
     if not model_path.exists():
-        raise FileNotFoundError(f"{model_path} not found — put tabs in data/songs/ and run: python -m flybrain_composer.cli fit-multi")
+        raise FileNotFoundError(f"{model_path} not found — put tabs in data/songs/ and run: python -m fruit_fly_djent.cli fit-multi")
     out_dir = Path(out_dir or config.OUTPUT_DIR)
     out_dir.mkdir(parents=True, exist_ok=True)
     model = ComposerModel.load(model_path)
@@ -104,7 +104,7 @@ def generate_riffs(*, bars: int = 16, phrase_bars: int = 4, bpm: float | None = 
         else:
             print(f"[generate] {msg}  pitches {pitches}", flush=True)
     tag = tag or f"seed{seed}"
-    out_midi = out_dir / f"flybrain_djent_{tag}.mid"
+    out_midi = out_dir / f"fruit_fly_djent_{tag}.mid"
     notes_to_midi(all_notes, out_midi, bpm=bpm, drums=all_drums if drums else None)
     rend = PhraseRenderer(bpm, total_s=song.seconds + 3.0, sr=SR)
     mix = np.zeros((int((song.seconds + 3.0) * SR) + SR, 2), np.float32)
@@ -120,9 +120,9 @@ def generate_riffs(*, bars: int = 16, phrase_bars: int = 4, bpm: float | None = 
     if peak > 0.9:
         mix *= 0.9 / peak
     end = int(min(len(mix), (song.seconds + 1.5) * SR))
-    out_wav = out_dir / f"flybrain_djent_{tag}.wav"
+    out_wav = out_dir / f"fruit_fly_djent_{tag}.wav"
     sf.write(str(out_wav), mix[:end], SR)
-    out_json = out_dir / f"flybrain_djent_{tag}.json"
+    out_json = out_dir / f"fruit_fly_djent_{tag}.json"
     out_json.write_text(json.dumps({"bpm": bpm, "cycle16": int(cycle16), "snare": snare, "density": density,
                                     "wildness": wildness, "seed": seed, "phrases": log}, indent=1))
     try:
