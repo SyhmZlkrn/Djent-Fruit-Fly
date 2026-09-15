@@ -7,6 +7,7 @@ plus a tiny launcher API so the page's buttons can start the Python conductor th
     GET /api/launch?mode=play|improvise|generate -> starts `python -m flybrain_composer.cli play [--improvise|--generate]`
                  [&restart=1][&window=0]     (restart kills a conductor this server started first)
     GET /api/stop                         -> kills the conductor this server started (and its planner/workers)
+    POST /api/screenshot?name=…           -> saves the PNG the stage renders (press X on the page) to output/screenshots/
 
 The conductor itself serves stage/ with the same handler when port 8000 is free, so the page works
 either way; launching/restarting from the page needs this standalone server (a process cannot
@@ -167,6 +168,23 @@ class NoCacheHandler(http.server.SimpleHTTPRequestHandler):
         self.send_header("Content-Length", str(len(data)))
         self.end_headers()
         self.wfile.write(data)
+
+    def do_POST(self):
+        url = urllib.parse.urlparse(self.path)
+        if url.path != "/api/screenshot":
+            return self._json({"ok": False, "hint": "unknown api"}, 404)
+        q = {k: v[-1] for k, v in urllib.parse.parse_qs(url.query).items()}
+        n = int(self.headers.get("Content-Length", "0"))
+        data = self.rfile.read(n) if n else b""
+        if not data.startswith(b"\x89PNG") and not data.startswith(b"\xff\xd8"):
+            return self._json({"ok": False, "hint": "expected a PNG or JPEG body"}, 400)
+        name = "".join(ch for ch in q.get("name", "stage") if ch.isalnum() or ch in "-_.") or "stage"
+        ext = ".png" if data.startswith(b"\x89PNG") else ".jpg"
+        out_dir = config.OUTPUT_DIR / "screenshots"
+        out_dir.mkdir(parents=True, exist_ok=True)
+        path = out_dir / f"{name}{ext}"
+        path.write_bytes(data)
+        return self._json({"ok": True, "path": str(path), "bytes": len(data)})
 
     def do_GET(self):
         url = urllib.parse.urlparse(self.path)

@@ -670,8 +670,25 @@ $('tglLive').onclick = toggleLive;
 $('btnGen').onclick = startGenerator;
 $('voteUp').onclick = () => vote(+1);
 $('voteDown').onclick = () => vote(-1);
+// X = screenshot of the stage as rendered (posted to the stage server -> output/screenshots/, else downloaded)
+async function stageShot(name) {
+  bloom.enabled ? composer.render() : renderer.render(scene, camera);   // draw, then read the buffer in the same tick
+  const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+  const label = name || `stage_${S.camMode}_${songTime().toFixed(1)}s`;
+  try {
+    const r = await fetch(`/api/screenshot?name=${encodeURIComponent(label)}`, { method: 'POST', headers: { 'Content-Type': 'image/png' }, body: blob });
+    const j = r.ok ? await r.json() : null;
+    if (j && j.ok) { $('clock').textContent = `(saved ${j.path})`; return j.path; }
+  } catch (e) { }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${label}.png`; a.click();
+  $('clock').textContent = `(downloaded ${label}.png)`;
+  return null;
+}
+window.stageShot = stageShot;
+
 window.addEventListener('keydown', e => {
   if (S.placing || e.target.tagName === 'INPUT') return;
+  if (e.key === 'x' || e.key === 'X') stageShot();
   if (e.key === 'g') clickStem('guitar'); if (e.key === 'b') clickStem('backing'); if (e.key === 'd') clickStem('drums');
   if (e.key === 'k' || e.key === 'K' || e.key === '+') vote(+1);
   if (e.key === 'j' || e.key === 'J' || e.key === '-') vote(-1);
