@@ -261,9 +261,9 @@ not the composer. Say it that way.
 
 ## Try it without installing anything
 
-* **Riff generator demo (Hugging Face Space):** https://huggingface.co/spaces/SyhmZlkrn/Djent-Fruit-Fly — the
-  offline generator (`cli generate`) behind a Gradio UI: pick BPM, riff cycle, snare, density, seed → WAV + MIDI.
-  The live show needs a desktop.
+* **Hugging Face Space:** https://huggingface.co/spaces/SyhmZlkrn/Djent-Fruit-Fly — the explainer page and riffs the
+  fly made up, as a free *static* Space. (The Gradio riff generator is in `hf_space/app.py` and runs locally with
+  `python hf_space/app.py`; hosting Gradio Spaces on Hugging Face needs a PRO plan, so it is not online.)
 * **How it works:** open [`docs/how_it_works.html`](docs/how_it_works.html) — pipeline diagrams, every step in plain
   words, the tools, and a timestamped build log with proof of every number.
 * **Listen:** [`docs/audio/`](docs/audio/) — riffs the fly made up from the 19-tab corpus.

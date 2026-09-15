@@ -30,7 +30,7 @@ sdk_version: {gradio_version}
 app_file: app.py
 pinned: false
 license: gpl-3.0
-short_description: A fruit fly's connectome, used as a fixed reservoir, makes up djent riffs
+short_description: A fruit fly's connectome makes up djent riffs
 ---
 
 # 🪰 FlyBrain Composer — riffs from a fruit fly's brain
